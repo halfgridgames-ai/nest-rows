@@ -164,6 +164,46 @@ button:focus-visible { outline: 3px solid var(--coral); outline-offset: 2px; }
 .toast { position: fixed; left: 50%; top: calc(70px + env(safe-area-inset-top, 0px)); transform: translateX(-50%); z-index: 20; background: var(--ink); color: var(--paper-light); padding: 9px 16px; border-radius: 6px; box-shadow: 3px 3px 0 var(--coral); max-width: calc(100% - 32px); text-align: center; }
 .tog.set { display: flex; justify-content: space-between; width: 100%; background: var(--paper); border: 2px solid var(--paper-deep); border-radius: 8px; padding: 10px 12px; font-size: 15px; color: var(--ink); }
 .tog.set b { color: var(--moss-deep); }
+
+/* ---- simple layout (after Meowdoku): round buttons, rule chips, an owl tracker, and a day or night look ---- */
+:root { --bg: var(--night); --fg: var(--paper-light); --btn-bg: var(--ink-2); --btn-fg: var(--paper-light); --chip-bg: rgba(246,238,219,0.07); --chip-bd: rgba(246,238,219,0.14); }
+body.day { --bg: #eaf3f2; --fg: var(--ink); --btn-bg: #fffaf0; --btn-fg: var(--ink); --chip-bg: rgba(255,255,255,0.75); --chip-bd: rgba(42,43,102,0.12); color-scheme: light; }
+body { background: var(--bg); color: var(--fg); }
+#hud { background: transparent; color: var(--fg); padding-block: 10px 4px; }
+#hud .lvl { text-align: center; font-size: 22px; }
+.rbtn { width: 46px; height: 46px; border-radius: 50%; background: var(--btn-bg); color: var(--btn-fg); display: grid; place-items: center; flex: none; box-shadow: 0 3px 0 rgba(0,0,0,0.25); }
+.rbtn svg, .rnd svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+#rules { display: flex; gap: 6px; padding: 6px 12px 0; justify-content: center; }
+.rule { flex: 1; max-width: 132px; display: flex; align-items: center; gap: 6px; background: var(--chip-bg); border: 1.5px solid var(--chip-bd); border-radius: 10px; padding: 5px 7px; font-size: 11.5px; line-height: 1.15; font-weight: 700; }
+.rule canvas { width: 26px; height: 26px; flex: none; }
+#bar { background: transparent; color: var(--fg); gap: 30px; padding-block: 6px 14px; }
+.bw { display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 800; }
+.rnd { position: relative; width: 66px; height: 66px; border-radius: 50%; background: var(--btn-bg); color: var(--btn-fg); display: grid; place-items: center; box-shadow: 0 4px 0 rgba(0,0,0,0.28); }
+.rnd svg { width: 28px; height: 28px; stroke-width: 2.4; }
+.rnd:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,0.28); }
+.rnd[disabled] { opacity: 0.4; cursor: default; }
+.rnd.hintb { background: var(--sun); color: var(--ink); }
+.rnd .badge { position: absolute; top: -6px; right: -12px; background: var(--coral); color: #fff; border-radius: 999px; padding: 0 8px; font-size: 13px; line-height: 22px; box-shadow: 0 2px 0 rgba(0,0,0,0.2); white-space: nowrap; }
+.rnd .badge.ad { background: #3fae5a; }
+#menu { background: var(--bg); }
+.logo { color: var(--fg); }
+/* daily streak screen */
+.streakscene { background: var(--bg); color: var(--fg); display: flex; flex-direction: column; justify-content: space-between; align-items: center; place-items: unset; gap: 12px; padding-block: calc(26px + env(safe-area-inset-top, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)); }
+.sTitle { font-family: var(--display); font-size: 24px; text-align: center; }
+#streakCv { width: 200px; height: 170px; display: block; margin: 0 auto; }
+.sMid { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.sNum { font-family: var(--display); font-size: 96px; line-height: 1; color: var(--sun); text-shadow: 4px 4px 0 var(--coral); animation: rankIn .55s cubic-bezier(.2,1.7,.5,1) both; }
+.sLbl { font-family: var(--display); font-size: 24px; color: var(--sun); }
+.sBest { background: var(--chip-bg); border: 1.5px solid var(--chip-bd); border-radius: 999px; padding: 6px 22px; font-size: 17px; }
+.week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; width: min(380px, 100%); }
+.wday { display: flex; flex-direction: column; align-items: center; gap: 7px; font-size: 12px; font-weight: 800; letter-spacing: 0.06em; opacity: 0.6; }
+.wday.on { opacity: 1; color: var(--sun); }
+.wday i { width: 42px; height: 42px; border-radius: 50%; background: var(--chip-bd); display: grid; place-items: center; font-style: normal; font-size: 20px; color: #fff; }
+.wday.on i { background: var(--coral); box-shadow: 0 3px 0 var(--coral-deep); }
+.wday.gift i { background: transparent; }
+.wday.gift svg { width: 40px; height: 40px; }
+.wday.today i { animation: starIn .5s .4s cubic-bezier(.2,1.6,.5,1) both; }
+.streakscene .praise { color: var(--fg); text-shadow: none; max-width: 340px; }
 </style>
 </head>
 <body>
@@ -266,16 +306,18 @@ HGSplash.show();
 
 <div id="app">
   <div id="hud">
-    <button class="iconbtn" id="pauseBtn" aria-label="Pause"><svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg></button>
+    <button class="rbtn" id="backBtn" aria-label="Back to the woods"><svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
     <div class="lvl" id="hudLvl">Level 1<small>Hollow Grove</small></div>
-    <div class="pill" id="hudOwls"><small>Owls</small><span id="owlsN">0/6</span></div>
-    <div class="pill" id="hudTime"><small>Time</small><span id="timeN">0:00</span></div>
+    <button class="rbtn" id="pauseBtn" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v3M12 18.2v3M2.8 12h3M18.2 12h3M5.5 5.5l2.1 2.1M16.4 16.4l2.1 2.1M5.5 18.5l2.1-2.1M16.4 7.6l2.1-2.1"/></svg></button>
+    <div hidden><span id="hudOwls"><span id="owlsN"></span></span><span id="hudTime"><span id="timeN"></span></span></div>
   </div>
+  <div id="rules"><div class="rule"><canvas id="ru1"></canvas>One owl beside each tree</div><div class="rule"><canvas id="ru2"></canvas>Owls never touch, even corners</div><div class="rule"><canvas id="ru3"></canvas>Numbers count owls per line</div></div>
   <div id="stage"><canvas id="cv"></canvas><div id="hint" hidden></div>
     <div id="tut" hidden><div class="label"><span>Tutorial</span><span id="tutStep">1 / 5</span></div><p id="tutText"></p><button class="go" id="tutNext">Next</button><span class="tapme" id="tutTap" hidden>Tap the glowing branch</span></div></div>
   <div id="bar">
-    <button class="ctl" id="undoBtn" aria-label="Undo"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>Undo</button>
-    <button class="ctl hintc" id="hintBtn" aria-label="Hint"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V16h8v-1.3A7 7 0 0 0 12 2z"/></svg>Hint <span class="n" id="hintN">3</span></button>
+    <div class="bw"><button class="rnd" id="undoBtn" aria-label="Undo"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>Undo</div>
+    <div class="bw"><button class="rnd hintb" id="hintBtn" aria-label="Hint"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V16h8v-1.3A7 7 0 0 0 12 2z"/></svg><span class="badge ad" id="hintN">▶</span></button>Hint</div>
+    <div class="bw"><button class="rnd" id="clearBtn" aria-label="Start again"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/></svg></button>Restart</div>
   </div>
 </div>
 
@@ -293,6 +335,7 @@ HGSplash.show();
     <button class="tog" id="sndBtn">Sound on</button>
     <button class="tog" id="musBtn">Music on</button>
     <button class="tog" id="howBtn">How to play</button>
+    <button class="tog" id="themeBtn">Day</button>
   </div>
 </div>
 
@@ -308,6 +351,7 @@ HGSplash.show();
   <div class="card">
     <h2>Paused</h2>
     <button class="tog set" id="autoTuftBtn">Auto-mark around owls <b>On</b></button>
+    <button class="tog set" id="themeSet">Look <b>Night</b></button>
     <div class="row"><button class="ghost" id="pQuit">Menu</button><button class="ghost" id="pRetry">Clear</button><button class="go" id="pGo">Resume</button></div>
   </div>
 </div>
@@ -324,6 +368,14 @@ HGSplash.show();
     <button class="go big" id="wNext">Next</button>
     <button class="textbtn" id="wMenu">Back to the woods</button>
   </div>
+</div>
+
+<div class="overlay streakscene" id="streak" hidden>
+  <div><div class="sTitle">Daily Roost</div><canvas id="streakCv"></canvas></div>
+  <div class="sMid"><div class="sNum" id="sNum">1</div><div class="sLbl">night streak</div><div class="sBest" id="sBest">Best streak: 1</div></div>
+  <div class="week" id="sWeek"></div>
+  <p class="praise" id="sNote" role="status"></p>
+  <button class="go big" id="sGo">Continue</button>
 </div>
 
 <div class="overlay" id="needHint" hidden>
@@ -596,6 +648,7 @@ const INKS = {
   snowy: { body: '#f6eedb', belly: '#ffffff', eye: '#2a2b66', beak: '#f4b942' },
   moonlit: { body: '#9d8ad9', belly: '#f6eedb', eye: '#2a2b66', beak: '#f4b942' },
   ember: { body: '#c9452c', belly: '#f4b942', eye: '#2a2b66', beak: '#2a2b66' },
+  starry: { body: '#3c3e86', belly: '#f6e7b0', eye: '#2a2b66', beak: '#f4b942' },
 };
 const SKINS = [
   { id: 'coral', name: 'Coral Owl', desc: 'The first owl to roost in these woods.', stars: 0 },
@@ -603,8 +656,9 @@ const SKINS = [
   { id: 'snowy', name: 'Snowy Owl', desc: 'Unlocks at 60 stars.', stars: 60 },
   { id: 'moonlit', name: 'Moonlit Owl', desc: 'Feather pack.', pack: true },
   { id: 'ember', name: 'Ember Owl', desc: 'Feather pack.', pack: true },
+  { id: 'starry', name: 'Starry Owl', desc: 'Gift for a 7-night Daily Roost streak.', streak: true },
 ];
-const skinOwned = s => save.skins.includes(s.id) || (!s.pack && totalStars() >= s.stars);
+const skinOwned = s => save.skins.includes(s.id) || (!s.pack && !s.streak && totalStars() >= s.stars);
 const inkNow = () => INKS[save.skin] || INKS.coral;
 
 /* ---------- riso drawing helpers ---------- */
@@ -832,9 +886,9 @@ function resize() {
   if (G) layout();
 }
 function layout() {
-  const n = G.pz.n, pad = 14, panel = G.tut ? Math.min(210, H * 0.34) : 0;   // the tutorial card sits under the board
-  cs = Math.floor(Math.min((W - pad * 2) / (n + 1), (H - panel - pad * 2 - 24) / (n + 1)));
-  bx = Math.round((W - cs * (n + 1)) / 2 + cs); by = Math.round((H - panel - cs * (n + 1)) / 2 + cs);
+  const n = G.pz.n, pad = 14, top = 34, panel = G.tut ? Math.min(210, H * 0.34) : 0;   // owl tracker on top, tutorial card under the board
+  cs = Math.floor(Math.min((W - pad * 2) / (n + 1), (H - top - panel - pad * 2 - 24) / (n + 1)));
+  bx = Math.round((W - cs * (n + 1)) / 2 + cs); by = Math.round(top + (H - top - panel - cs * (n + 1)) / 2 + cs);
 }
 function startLevel(idx, daily = false, tut = false) {
   hideAll(); $('#menu').hidden = true; $('#tut').hidden = true;
@@ -855,7 +909,7 @@ function updateHud() {
   if (!G) return;
   const placed = owlsPlaced(), total = G.pz.trees.length;
   $('#owlsN').textContent = placed + '/' + total; $('#hudOwls').classList.toggle('done', G.solved);
-  $('#hintN').textContent = save.hints > 0 ? save.hints : '▶ Ad'; $('#undoBtn').disabled = !G.hist.length || G.solved || !!G.tut;
+  $('#hintN').textContent = save.hints > 0 ? save.hints : '▶'; $('#hintN').classList.toggle('ad', save.hints <= 0); $('#clearBtn').disabled = !!G.solved; $('#undoBtn').disabled = !G.hist.length || G.solved || !!G.tut;
 }
 let flashTimer = 0;
 // messages stay until the player taps them away or makes the next mark (ms only sets a minimum they stay for)
@@ -1005,7 +1059,8 @@ function win() {
   if (G.tut) { save.tutDone = true; $('#tut').hidden = true; }
   else if (G.daily) {
     const t = todayKey(), first = save.daily.last !== t;
-    if (first) { save.daily.streak = save.daily.last === yesterdayKey() ? save.daily.streak + 1 : 1; save.daily.last = t; }
+    if (first) { save.daily.streak = save.daily.last === yesterdayKey() ? save.daily.streak + 1 : 1; save.daily.last = t; save.daily.top = Math.max(save.daily.top || 0, save.daily.streak);
+      if (save.daily.streak % 7 === 0 && !save.skins.includes('starry')) { save.skins.push('starry'); G.gift = true; } }
     save.daily.best[t] = Math.min(save.daily.best[t] || 1e9, Math.round(G.time));
     G.dailyFirst = first;
   } else {
@@ -1041,8 +1096,21 @@ function showWin(stars) {
   $('#win').hidden = false; sfx.chime();
 }
 function maybeInterstitial(then) { money.interstitial(G && !G.daily ? G.idx : 0).then(then); }
-$('#wNext').onclick = () => { if (G.tut) { startLevel(nextLevel()); return; } if (G.daily || G.idx === LEVELS.length - 1) { showMenu(); return; } const n = G.idx + 1; maybeInterstitial(() => startLevel(n)); };
+$('#wNext').onclick = () => { if (G.tut) { startLevel(nextLevel()); return; } if (G.daily && G.dailyFirst) { showStreak(); return; } if (G.daily || G.idx === LEVELS.length - 1) { showMenu(); return; } const n = G.idx + 1; maybeInterstitial(() => startLevel(n)); };
 $('#wMenu').onclick = () => showMenu();
+// the daily streak screen: big number, best streak, and this week's nights with a gift on the seventh
+const GIFT_SVG = '<svg viewBox="0 0 40 40"><rect x="6" y="16" width="28" height="20" rx="3" fill="#ff6a4d"/><rect x="4" y="11" width="32" height="8" rx="2" fill="#f4b942"/><rect x="18" y="11" width="5" height="25" fill="#f4b942"/><path d="M20 11c-4-7-11-6-9-1 1 2 6 2 9 1zm0 0c4-7 11-6 9-1-1 2-6 2-9 1z" fill="#c9452c"/></svg>';
+function showStreak() {
+  hideAll(); const st = save.daily.streak, pos = (st - 1) % 7, last = new Date(save.daily.last + 'T12:00:00');
+  $('#sNum').textContent = st; $('#sBest').textContent = 'Best streak: ' + Math.max(save.daily.top || 0, st);
+  $('#sWeek').innerHTML = Array.from({ length: 7 }, (_, k) => { const d = new Date(last); d.setDate(d.getDate() + k - pos); const on = k <= pos;
+    return `<div class="wday${on ? ' on' : ''}${k === pos ? ' today' : ''}${k === 6 && !on ? ' gift' : ''}">${d.toLocaleDateString('en-GB', { weekday: 'short' }).toUpperCase()}<i>${k === 6 && !on ? GIFT_SVG : on ? '✓' : ''}</i></div>`; }).join('');
+  $('#sNote').textContent = G && G.gift ? 'Seven nights in a row! The Starry Owl has joined your roost.' : pos === 6 ? 'A full week of roosting. Keep it going.' : `${6 - pos} more night${6 - pos === 1 ? '' : 's'} to the gift.`;
+  const c = $('#streakCv'), d = 2; c.width = 200 * d; c.height = 170 * d; const x = c.getContext('2d'); x.scale(d, d);
+  x.save(); x.translate(72, 92); drawNest(x, 120, true, 1); x.restore(); x.save(); x.translate(150, 112); drawOwl(x, 78, inkNow()); x.restore();
+  $('#streak').hidden = false; sfx.chime();
+}
+$('#sGo').onclick = () => showMenu();
 
 /* ---------- drawing ---------- */
 // coral ring (and a little "!") on an owl or nest that breaks a rule
@@ -1056,8 +1124,8 @@ function badRing(s, t, bang) {
 function rr(c, x, y, w, h, r) { c.beginPath(); c.roundRect ? c.roundRect(x, y, w, h, r) : c.rect(x, y, w, h); }
 function drawCount(x, y, v, have, over, size) {
   ctx.font = `${size}px "Rammetto One", "Arial Rounded MT Bold", sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  const col = over ? CORAL : have === v ? LEAF_L : PAPER_L;
-  ctx.fillStyle = col === PAPER_L ? 'rgba(255,106,77,0.6)' : 'rgba(0,0,0,0.45)'; ctx.fillText(v, x + 1.5, y + 1.5);
+  const SK = skyNow(), col = over ? CORAL : have === v ? SK.done : SK.fg;
+  ctx.fillStyle = col === SK.fg ? 'rgba(255,106,77,0.6)' : SK.day ? 'rgba(42,43,102,0.25)' : 'rgba(0,0,0,0.45)'; ctx.fillText(v, x + 1.5, y + 1.5);
   ctx.fillStyle = col; ctx.fillText(v, x, y);
 }
 // twinkling night sky: fixed star positions, each pulsing on its own beat
@@ -1070,13 +1138,33 @@ const SKIES = [
   { top: '#0f1836', bot: '#1d2a55', board: '#20305e', sky: '#18244b', extra: 'moon' },     // Moonfall Pines: big moon over pines
   { top: '#0a1229', bot: '#122544', board: '#1a2e52', sky: '#132442', extra: 'aurora' },   // Old Oak: northern lights
 ];
-const skyNow = () => SKIES[!G || G.tut ? 0 : G.daily ? 1 : woodIdx(G.idx)];
+// the same woods by day: soft morning, blue sky, pines, golden afternoon
+const DAY_SKIES = [
+  { top: '#ffd6bf', bot: '#fff3e3', board: '#fffaf0', sky: '#f3e6d6', day: true },
+  { top: '#a9dcf2', bot: '#eef7f2', board: '#fffaf0', sky: '#e2edee', day: true },
+  { top: '#9cc8e8', bot: '#e6f2ea', board: '#fbf8ee', sky: '#dde9e4', day: true, extra: 'pines' },
+  { top: '#f7c983', bot: '#fdf0d6', board: '#fffaf0', sky: '#f2e4c8', day: true },
+];
+for (const k of SKIES) Object.assign(k, { fg: PAPER_L, done: LEAF_L, grid: 'rgba(246,238,219,0.13)', dots: 'rgba(246,231,176,0.35)', shade: '#090a22' });
+for (const k of DAY_SKIES) Object.assign(k, { fg: '#2a2b66', done: '#4f8a3f', grid: 'rgba(42,43,102,0.16)', dots: 'rgba(42,43,102,0.13)', shade: 'rgba(42,43,102,0.22)' });
+const isDay = () => save.theme === 'day';
+const skyAt = k => (isDay() ? DAY_SKIES : SKIES)[k];
+const skyNow = () => skyAt(!G || G.tut ? 0 : G.daily ? 1 : woodIdx(G.idx));
+function cloud(c, x, y, r) { c.beginPath(); c.arc(x, y, r, 0, 7); c.arc(x + r * 0.9, y - r * 0.4, r * 0.8, 0, 7); c.arc(x + r * 1.8, y, r * 0.9, 0, 7); c.fill(); }
+function drawDaySky(c, w, h, t, sk, bare) {
+  const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, sk.top); g.addColorStop(1, sk.bot); c.fillStyle = g; c.fillRect(0, 0, w, h);
+  if (!bare) { const sx = w - 38, sy = 36, sg = c.createRadialGradient(sx, sy, 10, sx, sy, 48); sg.addColorStop(0, 'rgba(255,214,102,0.55)'); sg.addColorStop(1, 'rgba(255,214,102,0)'); c.fillStyle = sg; c.fillRect(sx - 48, sy - 48, 96, 96); c.fillStyle = SUN; c.beginPath(); c.arc(sx, sy, 16, 0, 7); c.fill(); }
+  c.fillStyle = 'rgba(255,255,255,0.85)';
+  for (const [k, yy, r] of [[0, 0.07, 12], [1, 0.16, 9], [2, 0.11, 15]]) cloud(c, ((t / (90 + k * 40) + k * 170) % (w + 140)) - 70, h * yy, r);
+  if (sk.extra === 'pines') { c.fillStyle = '#86b07a'; for (let k = 0, x = -10; x < w + 30; k++) { const ph = 30 + ((k * 37) % 5) * 9, pw = ph * 0.55; c.beginPath(); c.moveTo(x, h); c.lineTo(x + pw / 2, h - ph); c.lineTo(x + pw, h); c.fill(); x += pw * 0.7; } }
+}
 function crescent(c, x, y, r, a = 1) {
   const g = c.createRadialGradient(x, y, r * 0.6, x, y, r * 2.2); g.addColorStop(0, `rgba(244,185,66,${0.22 * a})`); g.addColorStop(1, 'rgba(244,185,66,0)'); c.fillStyle = g; c.fillRect(x - r * 2.2, y - r * 2.2, r * 4.4, r * 4.4);
   c.save(); c.beginPath(); c.rect(x - r * 2, y - r * 2, r * 4, r * 4); c.arc(x - r * 0.42, y - r * 0.3, r * 0.86, 0, 7); c.clip('evenodd');
   c.fillStyle = SUN; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); c.restore();
 }
-function drawSky(c, w, h, t, sk) {
+function drawSky(c, w, h, t, sk, bare = false) {
+  if (sk.day) { drawDaySky(c, w, h, t, sk, bare); return; }
   const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, sk.top); g.addColorStop(1, sk.bot); c.fillStyle = g; c.fillRect(0, 0, w, h);
   if (sk.extra === 'dusk') { const hg = c.createRadialGradient(w * 0.5, h * 1.05, 10, w * 0.5, h * 1.05, h * 0.55); hg.addColorStop(0, 'rgba(255,140,110,0.45)'); hg.addColorStop(1, 'rgba(255,140,110,0)'); c.fillStyle = hg; c.fillRect(0, 0, w, h); }
   if (sk.extra === 'aurora') for (let k = 0; k < 3; k++) {
@@ -1091,7 +1179,7 @@ function drawSky(c, w, h, t, sk) {
     c.fillStyle = 'rgba(185,150,80,0.35)'; for (const [dx, dy, k] of [[-0.3, -0.2, 0.22], [0.25, 0.3, 0.16], [0.35, -0.35, 0.1], [-0.1, 0.45, 0.08]]) { c.beginPath(); c.arc(mx + dx * r, my + dy * r, k * r, 0, 7); c.fill(); }
     // pine silhouettes along the bottom
     c.fillStyle = '#0b1128'; for (let k = 0, x = -10; x < w + 30; k++) { const ph = 30 + ((k * 37) % 5) * 9, pw = ph * 0.55; c.beginPath(); c.moveTo(x, h); c.lineTo(x + pw / 2, h - ph); c.lineTo(x + pw, h); c.fill(); x += pw * 0.7; }
-  } else crescent(c, w - 30, 28, 14);
+  } else if (!bare) crescent(c, w - 30, 28, 14);
 }
 // fireflies: they drift over the board, and each owl you place gets one that settles on a leaf beside it
 function syncFlies(t) {
@@ -1125,16 +1213,16 @@ function frame(t) {
   const SK = skyNow(); drawSky(ctx, W, H, t, SK);
   // a faint pale grid printed a touch off true
   const gx = bx, gy = by, gw = cs * n;
-  ctx.fillStyle = '#090a22'; ctx.fillRect(gx + 4, gy + 4, gw, gw);
+  ctx.fillStyle = SK.shade; ctx.fillRect(gx + 4, gy + 4, gw, gw);
   ctx.fillStyle = SK.board; ctx.fillRect(gx, gy, gw, gw);
-  ctx.strokeStyle = 'rgba(246,238,219,0.13)'; ctx.lineWidth = 1.2;
+  ctx.strokeStyle = SK.grid; ctx.lineWidth = 1.2;
   for (let k = 0; k <= n; k++) { ctx.beginPath(); ctx.moveTo(gx + k * cs + 0.5, gy); ctx.lineTo(gx + k * cs + 0.5, gy + gw); ctx.stroke(); ctx.beginPath(); ctx.moveTo(gx, gy + k * cs + 0.5); ctx.lineTo(gx + gw, gy + k * cs + 0.5); ctx.stroke(); }
   ctx.strokeStyle = INK; ctx.lineWidth = 2.2; ctx.strokeRect(gx - 1, gy - 1, gw + 2, gw + 2);
   // open sky squares: shaded with a few printed stars
   for (let i = 0; i < n * n; i++) if (state[i] === 4) {
     const x = gx + (i % n) * cs, y = gy + Math.floor(i / n) * cs;
     ctx.fillStyle = SK.sky; ctx.fillRect(x + 1, y + 1, cs - 1, cs - 1);
-    ctx.fillStyle = 'rgba(246,231,176,0.35)'; const h = (i * 2654435761) >>> 0;
+    ctx.fillStyle = SK.dots; const h = (i * 2654435761) >>> 0;
     for (let k = 0; k < 2; k++) { const sx = x + cs * (0.2 + ((h >> (k * 7)) & 63) / 63 * 0.6), sy = y + cs * (0.2 + ((h >> (k * 7 + 3)) & 63) / 63 * 0.6); ctx.beginPath(); ctx.arc(sx, sy, Math.max(1, cs * 0.03), 0, 7); ctx.fill(); }
   }
   // branches: one limb from each tree into every square its owl could use
@@ -1190,7 +1278,10 @@ function frame(t) {
       ctx.strokeRect(gx + (G.hintCell % n) * cs + 3, gy + Math.floor(G.hintCell / n) * cs + 3, cs - 6, cs - 6); ctx.setLineDash([]);
     }
   }
-  syncFlies(t); drawFlies(gx, gy, t);
+  syncFlies(t); if (!SK.day) drawFlies(gx, gy, t);
+  // owl tracker: one owl per tree, filled in as owls land
+  { const k = pz.trees.length, sz = Math.min(22, (W - 40) / k), placed = Math.min(k, owlsPlaced()), x0 = W / 2 - (k - 1) * sz / 2, ghost = SK.day ? { body: '#d9d2c2', belly: '#ebe5d8', eye: '#c4bba8', beak: '#d9d2c2' } : { body: '#353a72', belly: '#40467f', eye: '#2a2e60', beak: '#353a72' };
+    for (let j = 0; j < k; j++) { ctx.save(); ctx.translate(x0 + j * sz, 17); drawOwl(ctx, sz * 1.15, j < placed ? inkNow() : ghost); ctx.restore(); } }
   grain(ctx, W, H, 0.09);
 }
 
@@ -1200,11 +1291,11 @@ let mGrain = null;
 function menuResize() { const d = Math.min(2, window.devicePixelRatio || 1); mcv.width = innerWidth * d; mcv.height = innerHeight * d; mctx.setTransform(d, 0, 0, d, 0, 0); mGrain = null; }
 function drawMenu(t) {
   const w = innerWidth, h = innerHeight;
-  drawSky(mctx, w, h, t, SKIES[1]);
+  drawSky(mctx, w, h, t, skyAt(1), true);
   { const R0 = Math.min(w, h) * 0.13, g = mctx.createRadialGradient(w * 0.78, h * 0.13, R0 * 0.9, w * 0.78, h * 0.13, R0 * 2); g.addColorStop(0, 'rgba(244,185,66,0.28)'); g.addColorStop(1, 'rgba(244,185,66,0)'); mctx.fillStyle = g; mctx.fillRect(0, 0, w, h * 0.5); }
   // big moon, printed in sun ink
   mctx.fillStyle = SUN; mctx.beginPath(); mctx.arc(w * 0.78, h * 0.13, Math.min(w, h) * 0.13, 0, 7); mctx.fill();
-  mctx.fillStyle = 'rgba(185,129,26,0.5)'; for (const [dx, dy, k] of [[-0.3, -0.2, 0.22], [0.25, 0.3, 0.16], [0.35, -0.35, 0.1]]) { const R0 = Math.min(w, h) * 0.13; mctx.beginPath(); mctx.arc(w * 0.78 + dx * R0, h * 0.13 + dy * R0, k * R0, 0, 7); mctx.fill(); }
+  mctx.fillStyle = 'rgba(185,129,26,0.5)'; if (!isDay()) for (const [dx, dy, k] of [[-0.3, -0.2, 0.22], [0.25, 0.3, 0.16], [0.35, -0.35, 0.1]]) { const R0 = Math.min(w, h) * 0.13; mctx.beginPath(); mctx.arc(w * 0.78 + dx * R0, h * 0.13 + dy * R0, k * R0, 0, 7); mctx.fill(); }
   // a wide branch across the middle, with the owl family on it
   const by0 = h * 0.42, s = Math.min(w, h) * 0.17;
   mctx.lineCap = 'round';
@@ -1254,7 +1345,7 @@ function drawWin(t) {
 }
 
 /* ---------- screens ---------- */
-function hideAll() { for (const id of ['levels', 'pause', 'win', 'needHint', 'roost', 'shop', 'how', 'ad', 'tut']) $('#' + id).hidden = true; WS = null; }
+function hideAll() { for (const id of ['levels', 'pause', 'win', 'needHint', 'roost', 'shop', 'how', 'ad', 'tut', 'streak']) $('#' + id).hidden = true; WS = null; }
 function showMenu() { hideAll(); G = null; renderMenu(); $('#menu').hidden = false; }
 function renderMenu() {
   const n = nextLevel(), all = Object.keys(save.stars).length >= LEVELS.length;
@@ -1284,8 +1375,22 @@ $('#sndBtn').onclick = () => { save.sound = !save.sound; persist(); renderMenu()
 $('#musBtn').onclick = () => { save.music = !save.music; persist(); renderMenu(); if (save.music) music.start(); else if (AC) musicBus.gain.setTargetAtTime(0, AC.currentTime, 0.1); };
 $('#howBtn').onclick = () => { drawHow(); $('#how').hidden = false; };
 $('#howClose').onclick = () => { $('#how').hidden = true; };
+$('#backBtn').onclick = () => { if (G) showMenu(); };
+$('#clearBtn').onclick = () => clearBoard();
 $('#pauseBtn').onclick = () => { if (G && !G.solved) { renderPause(); $('#pause').hidden = false; } };
-function renderPause() { $('#autoTuftBtn').innerHTML = `Auto-mark around owls <b>${save.autoTuft ? 'On' : 'Off'}</b>`; }
+function renderPause() { $('#autoTuftBtn').innerHTML = `Auto-mark around owls <b>${save.autoTuft ? 'On' : 'Off'}</b>`; $('#themeSet').innerHTML = `Look <b>${isDay() ? 'Day' : 'Night'}</b>`; }
+// day or night: a body class for the page, and the canvas picks its sky from save.theme
+function drawRuleIcons() {
+  for (const [id, f] of [['ru1', c => { c.translate(13, 14); drawNest(c, 26, false); }], ['ru2', c => { c.translate(13, 14); drawOwl(c, 22, inkNow()); }],
+    ['ru3', c => { c.font = '18px "Rammetto One", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = CORAL; c.fillText('2', 14, 15); c.fillStyle = isDay() ? '#2a2b66' : PAPER_L; c.fillText('2', 13, 14); }]]) {
+    const c = $('#' + id), d = 2; c.width = c.height = 26 * d; const x = c.getContext('2d'); x.scale(d, d); f(x);
+  }
+}
+function setTheme(th) { save.theme = th; persist(); document.body.classList.toggle('day', th === 'day'); drawRuleIcons(); $('#themeBtn').textContent = th === 'day' ? 'Night' : 'Day'; renderPause(); }
+$('#themeBtn').onclick = () => setTheme(isDay() ? 'night' : 'day');
+$('#themeSet').onclick = () => setTheme(isDay() ? 'night' : 'day');
+setTheme(save.theme || 'night');
+if (document.fonts) document.fonts.ready.then(drawRuleIcons);
 $('#autoTuftBtn').onclick = () => { save.autoTuft = !save.autoTuft; persist(); renderPause(); };
 $('#pGo').onclick = () => { $('#pause').hidden = true; };
 $('#pRetry').onclick = () => { $('#pause').hidden = true; clearBoard(); };
@@ -1325,7 +1430,7 @@ function renderRoost(msg) {
     const own = skinOwned(s), row = document.createElement('div'); row.className = 'item' + (save.skin === s.id ? ' on' : '');
     row.appendChild(skinPreview(s.id));
     row.insertAdjacentHTML('beforeend', `<div class="txt"><b>${s.name}</b><span>${own ? (s.id === 'coral' ? s.desc : 'Ready to roost.') : s.desc}</span></div>` +
-      (save.skin === s.id ? '<button class="buy" disabled>Roosting</button>' : own ? `<button class="buy" data-skin="${s.id}">Pick</button>` : s.pack ? `<button class="buy" data-buy="feather_pack">${money.price(findProduct('feather_pack'))}</button>` : `<button class="buy" disabled>${s.stars} ★</button>`));
+      (save.skin === s.id ? '<button class="buy" disabled>Roosting</button>' : own ? `<button class="buy" data-skin="${s.id}">Pick</button>` : s.pack ? `<button class="buy" data-buy="feather_pack">${money.price(findProduct('feather_pack'))}</button>` : (s.streak ? '<button class="buy" disabled>7 nights</button>' : `<button class="buy" disabled>${s.stars} ★</button>`)));
     box.appendChild(row);
   }
   $('#rMsg').textContent = msg || '';
@@ -1500,7 +1605,7 @@ resize(); menuResize(); renderMenu(); money.init();
 requestAnimationFrame(frame);
 
 // test hooks for automated play-throughs
-window.__nr = { get G() { return G; }, LEVELS, DAILY, TUT_STEPS, save, startLevel, setCell, showMenu, parse, deduce, check, get geo() { return { cs, bx, by }; }, nextMark };
+window.__nr = { get G() { return G; }, LEVELS, DAILY, TUT_STEPS, save, startLevel, setCell, showMenu, parse, deduce, check, get geo() { return { cs, bx, by }; }, nextMark, setTheme, showStreak };
 })();
 </script>
 
