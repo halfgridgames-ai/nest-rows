@@ -1,0 +1,95 @@
+apply plugin: 'com.android.application'
+
+// ---------------------------------------------------------------------------
+// Release signing (optional).
+// Values come from environment variables first, then Gradle properties
+// (e.g. ~/.gradle/gradle.properties or -PNR_KEYSTORE=...):
+//   NR_KEYSTORE           path to the upload keystore (.jks)
+//   NR_KEYSTORE_PASSWORD  keystore password
+//   NR_KEY_ALIAS          key alias inside the keystore
+//   NR_KEY_PASSWORD       key password
+// If any are missing, no release signing is configured: debug builds work as
+// normal and a release build is produced unsigned.
+// ---------------------------------------------------------------------------
+def nrSecret = { String name ->
+    def v = System.getenv(name)
+    if (v == null || v.trim().isEmpty()) {
+        v = project.findProperty(name)
+    }
+    return (v == null || v.toString().trim().isEmpty()) ? null : v.toString()
+}
+def nrKeystore = nrSecret('NR_KEYSTORE')
+def nrKeystorePassword = nrSecret('NR_KEYSTORE_PASSWORD')
+def nrKeyAlias = nrSecret('NR_KEY_ALIAS')
+def nrKeyPassword = nrSecret('NR_KEY_PASSWORD')
+def nrCanSign = nrKeystore && nrKeystorePassword && nrKeyAlias && nrKeyPassword && file(nrKeystore).exists()
+if (!nrCanSign) {
+    logger.lifecycle("Nest Rows: release signing not configured (NR_KEYSTORE* not set) - release output will be unsigned.")
+}
+
+android {
+    namespace = "com.halfgridgames.nestrows"
+    compileSdk = rootProject.ext.compileSdkVersion
+    defaultConfig {
+        applicationId "com.halfgridgames.nestrows"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        // Bump versionCode by 1 for every upload to Google Play; versionName is what users see.
+        versionCode 1
+        versionName "1.0.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        aaptOptions {
+             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
+             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
+            ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+    }
+    signingConfigs {
+        if (nrCanSign) {
+            release {
+                storeFile file(nrKeystore)
+                storePassword nrKeystorePassword
+                keyAlias nrKeyAlias
+                keyPassword nrKeyPassword
+            }
+        }
+    }
+    buildTypes {
+        release {
+            if (nrCanSign) {
+                signingConfig signingConfigs.release
+            }
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    implementation project(':capacitor-android')
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    implementation project(':capacitor-cordova-android-plugins')
+}
+
+apply from: 'capacitor.build.gradle'
+
+try {
+    def servicesJSON = file('google-services.json')
+    if (servicesJSON.text) {
+        apply plugin: 'com.google.gms.google-services'
+    }
+} catch(Exception e) {
+    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}

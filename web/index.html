@@ -1,0 +1,1509 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#151838">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Nest Rows">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Nest Rows</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rammetto+One&family=Baloo+2:wght@600;700;800&display=swap">
+<style>
+/* Layout: one portrait screen printed like a two-colour risograph poster on kraft paper. Ink band on top, the
+   branch grid on paper in the middle, a control strip at the bottom. Cards are torn paper tickets. */
+:root {
+  --night: #151838;
+  --night-2: #1f2352;
+  --paper: #e9dcc1;
+  --paper-deep: #d8c6a0;
+  --paper-light: #f6eedb;
+  --ink: #2a2b66;
+  --ink-2: #3c3e86;
+  --ink-dim: rgba(42,43,102,0.55);
+  --coral: #ff6a4d;
+  --coral-deep: #c9452c;
+  --moss: #5f8f4e;
+  --moss-deep: #3f6633;
+  --sun: #f4b942;
+  --sun-deep: #b9811a;
+  --display: "Rammetto One", "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
+  --body: "Baloo 2", "Segoe UI", system-ui, sans-serif;
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+[hidden] { display: none !important; }
+body { background: var(--night); color: var(--paper-light); font-family: var(--body); font-weight: 700; overflow: hidden; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; touch-action: none; }
+button { font-family: var(--body); font-weight: 800; cursor: pointer; color: inherit; border: 0; }
+button:focus-visible { outline: 3px solid var(--coral); outline-offset: 2px; }
+#app { position: fixed; inset: 0; display: flex; flex-direction: column; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+/* HUD: ink band */
+#hud { display: flex; align-items: center; gap: 10px; padding-block: 8px; padding-left: max(12px, env(safe-area-inset-left, 0px)); padding-right: max(12px, env(safe-area-inset-right, 0px)); background: #0d0f2b; color: var(--paper-light); }
+#hud .lvl { flex: 1; min-width: 0; font-family: var(--display); font-size: 17px; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#hud .lvl small { display: block; font-family: var(--body); font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--sun); }
+.pill { display: flex; align-items: baseline; gap: 5px; background: var(--ink-2); border-radius: 999px; padding: 6px 12px; font-size: 17px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pill small { font-size: 11px; color: var(--paper-deep); letter-spacing: 0.06em; text-transform: uppercase; }
+.pill.done { background: var(--moss); }
+.iconbtn { width: 40px; height: 40px; border-radius: 12px; background: var(--ink-2); color: var(--paper-light); display: grid; place-items: center; flex: none; }
+.iconbtn svg, .ctl svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+#stage { position: relative; flex: 1; min-height: 0; }
+#cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+#hint { position: absolute; left: 12px; right: 12px; bottom: 10px; width: fit-content; margin: 0 auto; background: var(--ink); color: var(--paper-light); padding: 10px 34px 10px 14px; border-radius: 6px; font-weight: 700; font-size: 14.5px; line-height: 1.35; transition: opacity .4s; max-width: 100%; text-align: center; box-shadow: 3px 3px 0 var(--coral); cursor: pointer; }
+#hint::after { content: "✕"; position: absolute; right: 10px; top: 8px; font-size: 13px; color: var(--paper-deep); }
+
+/* tutorial panel */
+#tut { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); width: min(360px, calc(100% - 24px)); background: var(--paper-light); color: var(--ink); border: 2.5px solid var(--ink); border-radius: 6px; box-shadow: 4px 4px 0 var(--coral); padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; animation: pop .28s cubic-bezier(.2,1.4,.5,1); }
+#tut p { margin: 0; font-size: 15px; line-height: 1.4; font-weight: 700; }
+#tut .label { display: flex; justify-content: space-between; }
+#tut .go { padding: 9px 16px; font-size: 15px; align-self: flex-end; }
+#tut .tapme { color: var(--coral-deep); font-size: 13px; align-self: flex-end; }
+
+/* bottom controls */
+#bar { display: flex; gap: 10px; justify-content: center; align-items: stretch; padding-block: 8px 10px; padding-left: max(12px, env(safe-area-inset-left, 0px)); padding-right: max(12px, env(safe-area-inset-right, 0px)); background: #0d0f2b; color: var(--paper-light); }
+.ctl { flex: 1; max-width: 170px; display: flex; align-items: center; justify-content: center; gap: 7px; background: var(--ink-2); border-radius: 10px; padding: 11px 8px; font-size: 16px; box-shadow: 3px 3px 0 #15163a; }
+.ctl:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #15163a; }
+.ctl[disabled] { opacity: 0.4; cursor: default; }
+.ctl.hintc { background: var(--sun); color: var(--ink); box-shadow: 3px 3px 0 var(--sun-deep); }
+.ctl .n { background: rgba(0,0,0,0.14); border-radius: 999px; padding: 0 7px; font-size: 13px; line-height: 20px; }
+
+/* buttons */
+.go, .ghost, .buy { font-size: 17px; border-radius: 8px; padding: 12px 20px; }
+.go { background: var(--coral); color: var(--paper-light); box-shadow: 4px 4px 0 var(--ink); }
+.go:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--ink); }
+.ghost { background: transparent; color: var(--ink); border: 2.5px solid var(--ink); }
+.buy { background: var(--sun); color: var(--ink); box-shadow: 3px 3px 0 var(--ink); font-size: 15px; padding: 9px 14px; white-space: nowrap; }
+.buy.ad { background: var(--moss); color: var(--paper-light); }
+.buy[disabled] { opacity: 0.45; cursor: default; box-shadow: none; }
+
+/* menu */
+#menu { position: fixed; inset: 0; z-index: 5; background: var(--night); display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 12px; padding-block: calc(24px + env(safe-area-inset-top, 0px)) calc(22px + env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); overflow-y: auto; }
+#menuCv { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+#menu > *:not(canvas) { position: relative; }
+.logo { font-family: var(--display); font-size: clamp(46px, 15vw, 76px); line-height: 0.9; text-align: center; color: var(--paper-light); text-shadow: 4px 4px 0 var(--coral); letter-spacing: -0.01em; margin-bottom: auto; }
+.logo span { display: block; color: var(--coral); text-shadow: 4px 4px 0 #0d0f2b; }
+.tag { color: var(--paper-light); background: var(--ink-2); padding: 6px 14px; border-radius: 4px; font-size: 14px; text-align: center; transform: rotate(-2deg); }
+.menuBtns { display: grid; gap: 10px; width: min(300px, 100%); }
+.menuBtns .go { font-size: 22px; padding: 15px; }
+.menuBtns .go small { display: block; font-size: 13px; opacity: 0.9; font-weight: 700; }
+.daily { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--paper-light); color: var(--ink); border-radius: 8px; padding: 11px 14px; font-size: 17px; box-shadow: 4px 4px 0 var(--ink); text-align: left; }
+.daily small { display: block; font-size: 12.5px; color: var(--ink-dim); font-weight: 700; }
+.daily .streak { background: var(--sun); border-radius: 999px; padding: 4px 10px; font-size: 13px; white-space: nowrap; }
+.daily.done .streak { background: var(--moss); color: var(--paper-light); }
+.menuRow { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.menuRow button { background: var(--ink-2); color: var(--paper-light); border-radius: 8px; padding: 12px 6px; font-size: 15px; box-shadow: 4px 4px 0 var(--coral); }
+.menuFoot { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: center; }
+.menuFoot .tog, .menuFoot .chip { background: var(--ink-2); color: var(--paper-light); border-radius: 999px; padding: 8px 14px; font-size: 14px; }
+.starI { color: var(--sun); }
+
+/* overlays and cards */
+.overlay { position: fixed; inset: 0; z-index: 10; background: rgba(42,43,102,0.55); display: grid; place-items: center; padding-block: calc(16px + env(safe-area-inset-top, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); overflow-y: auto; }
+.card { background: var(--paper-light); color: var(--ink); border-radius: 6px; padding: 22px 20px 18px; width: min(380px, 100%); box-shadow: 6px 6px 0 var(--coral), 0 18px 40px rgba(20,20,60,0.35); display: flex; flex-direction: column; gap: 12px; animation: pop .28s cubic-bezier(.2,1.4,.5,1); border: 2.5px solid var(--ink); }
+@keyframes pop { from { transform: scale(0.86) rotate(-1deg); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .card, .stars .on { animation: none; } }
+.card h2 { font-family: var(--display); font-size: 26px; line-height: 1.1; margin: 0; text-wrap: balance; }
+.card p { margin: 0; line-height: 1.45; font-weight: 600; }
+.cardhead { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.label { font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--coral-deep); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.row > * { flex: 1 1 auto; }
+.note { font-size: 13px; color: var(--ink-dim); min-height: 1em; }
+.goals { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; font-weight: 700; font-size: 15px; line-height: 1.35; }
+.goals li { display: flex; gap: 8px; align-items: baseline; }
+.dot { color: var(--coral); }
+.stars { display: flex; justify-content: center; gap: 8px; font-size: 46px; line-height: 1; color: var(--paper-deep); }
+.stars .on { color: var(--sun); text-shadow: 2px 2px 0 var(--ink); animation: starIn .45s cubic-bezier(.2,1.6,.5,1) both; }
+@keyframes starIn { from { transform: scale(0) rotate(-40deg); } to { transform: none; } }
+.factrow { white-space: nowrap; display: flex; gap: 10px; justify-content: center; font-size: 15px; flex-wrap: wrap; }
+.factrow span { background: var(--paper); border-radius: 999px; padding: 5px 12px; }
+.howpic { display: block; width: 100%; max-width: 100%; height: 150px; border-radius: 6px; border: 2px solid var(--ink); background: var(--night); }
+
+/* win scene: full-screen print, the board still showing through */
+.winscene { background: rgba(42,43,102,0.78); display: flex; flex-direction: column; justify-content: space-between; align-items: center; place-items: unset; gap: 10px; padding-block: calc(34px + env(safe-area-inset-top, 0px)) calc(26px + env(safe-area-inset-bottom, 0px)); }
+.winscene canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.winscene > *:not(canvas) { position: relative; }
+.winTop, .winBottom { display: flex; flex-direction: column; align-items: center; gap: 10px; width: min(360px, 100%); }
+.rank { font-family: var(--display); font-size: clamp(38px, 12.5vw, 64px); line-height: 1; color: var(--paper-light); text-align: center; text-shadow: 3px 3px 0 var(--ink), 7px 7px 0 var(--coral); transform: rotate(-3deg); animation: rankIn .55s cubic-bezier(.2,1.7,.5,1) both; text-wrap: balance; }
+@keyframes rankIn { from { transform: scale(0) rotate(-20deg); opacity: 0; } to { transform: scale(1) rotate(-3deg); opacity: 1; } }
+.winscene .stars { animation: fadeUp .4s .3s both; }
+.praise { margin: 0; color: var(--paper-light); font-size: 17px; line-height: 1.4; text-align: center; font-weight: 700; text-shadow: 2px 2px 0 var(--ink); animation: fadeUp .5s .7s both; }
+.winscene .factrow span { background: rgba(246,238,219,0.14); color: var(--paper-light); }
+.winscene .factrow { animation: fadeUp .5s .85s both; }
+.go.big { font-size: 22px; padding: 16px 30px; width: min(300px, 100%); animation: fadeUp .5s 1s both; }
+.textbtn { background: transparent; color: var(--paper-deep); font-size: 15px; padding: 6px 12px; animation: fadeUp .5s 1.1s both; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .rank, .winscene .stars, .praise, .winscene .factrow, .go.big, .textbtn { animation: none; } }
+
+/* level grid */
+.tiers { display: grid; gap: 12px; max-height: min(58vh, 520px); overflow-y: auto; padding: 2px; }
+.grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 6px; }
+.grid button { aspect-ratio: 1; border-radius: 6px; background: var(--paper); box-shadow: 2px 2px 0 var(--ink); color: var(--ink); font-family: var(--display); font-size: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 0; }
+.grid button small { font-family: var(--body); font-size: 10px; letter-spacing: 1px; color: var(--sun-deep); }
+.grid button.locked { background: var(--paper-deep); color: rgba(42,43,102,0.35); box-shadow: none; }
+.grid button.next { background: var(--coral); color: var(--paper-light); }
+.grid button.next small { color: var(--paper-light); }
+
+/* shop and roost items */
+.items { display: grid; gap: 8px; }
+.item { display: flex; align-items: center; gap: 10px; background: var(--paper); border-radius: 6px; padding: 10px 12px; border: 2px solid var(--paper-deep); }
+.item canvas { width: 48px; height: 48px; flex: none; }
+.item .txt { flex: 1; min-width: 0; }
+.item .txt b { display: block; font-size: 15px; }
+.item .txt span { display: block; font-size: 12.5px; color: var(--ink-dim); font-weight: 600; line-height: 1.3; }
+.item .badge { font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; background: var(--coral); color: var(--paper-light); padding: 2px 7px; border-radius: 999px; margin-left: 6px; vertical-align: 2px; }
+.item.on { border-color: var(--moss); box-shadow: 0 0 0 2px var(--moss); }
+.adbar { height: 10px; border-radius: 999px; background: var(--paper-deep); overflow: hidden; }
+.adbar i { display: block; height: 100%; width: 0; background: var(--moss); }
+.toast { position: fixed; left: 50%; top: calc(70px + env(safe-area-inset-top, 0px)); transform: translateX(-50%); z-index: 20; background: var(--ink); color: var(--paper-light); padding: 9px 16px; border-radius: 6px; box-shadow: 3px 3px 0 var(--coral); max-width: calc(100% - 32px); text-align: center; }
+.tog.set { display: flex; justify-content: space-between; width: 100%; background: var(--paper); border: 2px solid var(--paper-deep); border-radius: 8px; padding: 10px 12px; font-size: 15px; color: var(--ink); }
+.tog.set b { color: var(--moss-deep); }
+</style>
+</head>
+<body>
+
+<!-- hg-splash -->
+<script>
+/* Half Grid Games studio splash. Drop-in: paste inside a <script> tag at the top of <body>,
+   then call HGSplash.show({ onDone: startGame }) once on launch. Tap skips.
+   To use an uploaded logo instead of the drawn one, set HGSplash.image to an image, GIF/WebP
+   or MP4/WebM URL (or data URI) before calling show(). */
+(function () {
+  var COLORS = ['#2EC4B6', '#FF6F59', '#2EC4B6', '#FF6F59'];
+  var THEMES = {
+    dark: { bg: '#0E1A2B', ink: '#FFFFFF', sub: 'rgba(255,255,255,.55)', line: 'rgba(255,255,255,.2)' },
+    light: { bg: '#FFF8EE', ink: '#0E1A2B', sub: 'rgba(14,26,43,.5)', line: 'rgba(14,26,43,.16)' }
+  };
+  var CSS =
+    '.hgs{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;' +
+    'font-family:"Avenir Next","Nunito","Segoe UI",system-ui,-apple-system,sans-serif;transition:opacity .45s ease;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none}' +
+    '.hgs.hgs-in{position:absolute}.hgs.hgs-out{opacity:0;pointer-events:none}' +
+    '.hgs svg{width:min(34vmin,132px);height:auto;overflow:visible}' +
+    '.hgs .c{transform-box:fill-box;transform-origin:center;animation:hgsPop .38s cubic-bezier(.3,1.7,.5,1) both}' +
+    '.hgs .f{transform-box:fill-box;transform-origin:center;animation:hgsFill .34s cubic-bezier(.2,1.5,.5,1) both}' +
+    '.hgs .m{transform-origin:center;animation:hgsNudge .5s ease 1.3s both}' +
+    '.hgs .w{display:flex;flex-direction:column;align-items:center;gap:6px;line-height:1}' +
+    '.hgs .w1{font-size:min(8vmin,30px);font-weight:800;letter-spacing:.16em;padding-left:.16em}' +
+    '.hgs .w2{font-size:min(3.6vmin,13px);font-weight:700;letter-spacing:.6em;padding-left:.6em}' +
+    '.hgs .w span{display:inline-block;animation:hgsRise .42s cubic-bezier(.2,1.4,.5,1) both}' +
+    '.hgs img,.hgs video{width:min(56vmin,240px);height:auto;border-radius:12%;animation:hgsImg .7s cubic-bezier(.2,1.3,.5,1) both}' +
+    '@keyframes hgsPop{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}' +
+    '@keyframes hgsFill{from{transform:scale(.2);opacity:0}to{transform:scale(1);opacity:1}}' +
+    '@keyframes hgsNudge{0%,100%{transform:rotate(0) scale(1)}40%{transform:rotate(-4deg) scale(1.06)}70%{transform:rotate(2deg) scale(.98)}}' +
+    '@keyframes hgsRise{from{transform:translateY(14px);opacity:0}to{transform:none;opacity:1}}' +
+    '@keyframes hgsImg{from{transform:scale(.8);opacity:0}to{transform:none;opacity:1}}' +
+    '@media (prefers-reduced-motion:reduce){.hgs *{animation-duration:.01s!important;animation-delay:0s!important}}';
+
+  function mark(t) {
+    var s = 22, g = 6, out = '', fills = '';
+    for (var r = 0; r < 4; r++) for (var c = 0; c < 4; c++) {
+      var x = c * (s + g), y = r * (s + g), d = r + c;
+      out += '<rect class="c" x="' + x + '" y="' + y + '" width="' + s + '" height="' + s + '" rx="5" fill="none" stroke="' + t.line +
+        '" stroke-width="2" style="animation-delay:' + d * 55 + 'ms"/>';
+      if (d < 3) continue;
+      // Lower-right half fills in from the corner; the diagonal cells fill exactly half, as triangles.
+      var col = COLORS[Math.min(d - 3, 3)], delay = 'animation-delay:' + (620 + (6 - d) * 85) + 'ms';
+      fills += d === 3
+        ? '<path class="f" d="M' + (x + s - 5) + ' ' + y + 'Q' + (x + s) + ' ' + y + ' ' + (x + s) + ' ' + (y + 5) + 'V' + (y + s - 5) + 'Q' + (x + s) + ' ' + (y + s) + ' ' + (x + s - 5) + ' ' + (y + s) + 'H' + (x + 5) + 'Q' + x + ' ' + (y + s) + ' ' + (x + 2) + ' ' + (y + s - 3) + 'L' + (x + s - 3) + ' ' + (y + 2) + 'Q' + (x + s - 4) + ' ' + y + ' ' + (x + s - 5) + ' ' + y + 'Z" fill="' + col + '" style="' + delay + '"/>'
+        : '<rect class="f" x="' + x + '" y="' + y + '" width="' + s + '" height="' + s + '" rx="5" fill="' + col + '" style="' + delay + '"/>';
+    }
+    return '<svg viewBox="-2 -2 110 110" aria-hidden="true"><g class="m">' + out + fills + '</g></svg>';
+  }
+
+  function letters(text, start, step) {
+    return text.split('').map(function (ch, i) {
+      return '<span style="animation-delay:' + (start + i * step) + 'ms">' + (ch === ' ' ? '&nbsp;' : ch) + '</span>';
+    }).join('');
+  }
+
+  var HG = window.HGSplash = {
+    image: null,
+    theme: 'dark',
+    duration: 2500,
+    show: function (opts) {
+      opts = opts || {};
+      if (!document.body) { document.addEventListener('DOMContentLoaded', function () { HG.show(opts); }); return; }
+      var t = THEMES[opts.theme || HG.theme] || THEMES.dark, host = opts.container || document.body, done = false, timer;
+      if (!document.getElementById('hgs-css')) {
+        var st = document.createElement('style'); st.id = 'hgs-css'; st.textContent = CSS; document.head.appendChild(st);
+      }
+      var el = document.createElement('div');
+      el.className = 'hgs' + (opts.container ? ' hgs-in' : '');
+      el.style.background = t.bg; el.style.color = t.ink;
+      el.setAttribute('role', 'img'); el.setAttribute('aria-label', 'Half Grid Games');
+      var img = opts.image || HG.image;
+      var word = '<div class="w"><div class="w1">' + letters('HALF GRID', 1000, 40) +
+        '</div><div class="w2" style="color:' + t.sub + '">' + letters('GAMES', 1380, 50) + '</div></div>';
+      if (img) {
+        // Uploaded art replaces the drawn mark; the studio name stays as crisp text underneath.
+        el.innerHTML = (/\.(mp4|webm)(\?|$)|^data:video/i.test(img)
+          ? '<video src="' + img + '" autoplay muted playsinline></video>' : '<img src="' + img + '" alt="">') + word;
+        var v = el.querySelector('video'); if (v) v.addEventListener('ended', finish);
+      } else {
+        el.innerHTML = mark(t) + word;
+      }
+      function finish() {
+        if (done) return; done = true; clearTimeout(timer);
+        el.classList.add('hgs-out');
+        setTimeout(function () { el.remove(); if (opts.onDone) opts.onDone(); }, 450);
+      }
+      el.addEventListener('pointerdown', finish);
+      host.appendChild(el);
+      timer = setTimeout(finish, opts.duration || (el.querySelector('video') ? 8000 : HG.duration));
+      return finish;
+    }
+  };
+})();
+HGSplash.show();
+</script>
+<!-- /hg-splash -->
+
+<div id="app">
+  <div id="hud">
+    <button class="iconbtn" id="pauseBtn" aria-label="Pause"><svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg></button>
+    <div class="lvl" id="hudLvl">Level 1<small>Hollow Grove</small></div>
+    <div class="pill" id="hudOwls"><small>Owls</small><span id="owlsN">0/6</span></div>
+    <div class="pill" id="hudTime"><small>Time</small><span id="timeN">0:00</span></div>
+  </div>
+  <div id="stage"><canvas id="cv"></canvas><div id="hint" hidden></div>
+    <div id="tut" hidden><div class="label"><span>Tutorial</span><span id="tutStep">1 / 5</span></div><p id="tutText"></p><button class="go" id="tutNext">Next</button><span class="tapme" id="tutTap" hidden>Tap the glowing branch</span></div></div>
+  <div id="bar">
+    <button class="ctl" id="undoBtn" aria-label="Undo"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>Undo</button>
+    <button class="ctl hintc" id="hintBtn" aria-label="Hint"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V16h8v-1.3A7 7 0 0 0 12 2z"/></svg>Hint <span class="n" id="hintN">3</span></button>
+  </div>
+</div>
+
+<div id="menu">
+  <canvas id="menuCv"></canvas>
+  <div class="logo">Nest<span>Rows</span></div>
+  <div class="tag">Every nest wants one owl. Owls want their space.</div>
+  <div class="menuBtns">
+    <button class="go" id="playBtn">Play<small id="playSub">Level 1</small></button>
+    <button class="daily" id="dailyBtn"><span>Daily Roost<small id="dailySub">A fresh tree every night</small></span><span class="streak" id="dailyStreak">Streak 0</span></button>
+    <div class="menuRow"><button id="levelsBtn">Levels</button><button id="roostBtn">Roost</button><button id="shopBtn">Shop</button></div>
+  </div>
+  <div class="menuFoot">
+    <span class="chip"><span class="starI">★</span> <span id="menuStars">0</span></span>
+    <button class="tog" id="sndBtn">Sound on</button>
+    <button class="tog" id="musBtn">Music on</button>
+    <button class="tog" id="howBtn">How to play</button>
+  </div>
+</div>
+
+<div class="overlay" id="levels" hidden>
+  <div class="card">
+    <div class="cardhead"><h2>The Woods</h2><span class="factrow"><span><span class="starI">★</span> <b id="lvStars">0</b>/195</span></span></div>
+    <div class="tiers" id="tiers"></div>
+    <div class="row"><button class="go" id="levelsClose">Done</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="pause" hidden>
+  <div class="card">
+    <h2>Paused</h2>
+    <button class="tog set" id="autoTuftBtn">Auto-mark around owls <b>On</b></button>
+    <div class="row"><button class="ghost" id="pQuit">Menu</button><button class="ghost" id="pRetry">Clear</button><button class="go" id="pGo">Resume</button></div>
+  </div>
+</div>
+
+<div class="overlay winscene" id="win" hidden>
+  <canvas id="winCv"></canvas>
+  <div class="winTop">
+    <div class="rank" id="wTitle">Every owl home</div>
+    <div class="stars" id="wStars"><span>★</span><span>★</span><span>★</span></div>
+  </div>
+  <div class="winBottom">
+    <p class="praise" id="wNote" role="status"></p>
+    <div class="factrow" id="wFacts"></div>
+    <button class="go big" id="wNext">Next</button>
+    <button class="textbtn" id="wMenu">Back to the woods</button>
+  </div>
+</div>
+
+<div class="overlay" id="needHint" hidden>
+  <div class="card">
+    <div class="label">Hints</div>
+    <h2>Ask the old owl</h2>
+    <p>A hint fills in the next branch that logic settles, and tells you why.</p>
+    <button class="buy ad" id="hAd">Watch ad for a hint</button>
+    <button class="buy" id="hShop">Hint packs</button>
+    <p class="note" id="hNote" role="status"></p>
+    <div class="row"><button class="ghost" id="hClose">Not now</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="roost" hidden>
+  <div class="card">
+    <div class="cardhead"><h2>Roost</h2><span class="factrow"><span><span class="starI">★</span> <b id="rStars">0</b></span></span></div>
+    <p class="note">Pick which owl roosts in your trees.</p>
+    <div class="items" id="skins"></div>
+    <p class="note" id="rMsg" role="status"></p>
+    <div class="row"><button class="go" id="rClose">Done</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="shop" hidden>
+  <div class="card">
+    <div class="cardhead"><h2>Shop</h2><span class="factrow"><span>Hints <b id="sHints">0</b></span></span></div>
+    <div class="items" id="extras"></div>
+    <p class="note" id="shopMsg" role="status"></p>
+    <div class="row"><button class="ghost" id="restoreBtn" hidden>Restore purchases</button><button class="go" id="shopClose">Done</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="how" hidden>
+  <div class="card">
+    <h2>How to roost</h2>
+    <canvas class="howpic" id="howCv" aria-label="Example: an owl sits beside a nest hollow, with row and column counts"></canvas>
+    <ul class="goals">
+      <li><span class="dot">●</span>Every nest tree wants exactly one owl, landed on one of the branches growing out of it. Squares with no branch are open sky.</li>
+      <li><span class="dot">●</span>An owl guards one nest only, and owls never sit next to each other, not even diagonally.</li>
+      <li><span class="dot">●</span>The numbers say how many owls roost in each row and column.</li>
+      <li><span class="dot">●</span>Tap a branch once to land an owl, twice to leave a grass tuft (a note that no owl goes there), and a third time to clear it. Tufts are optional, but on big boards they make the owls easier to find.</li>
+      <li><span class="dot">●</span>An owl that breaks a rule gets a coral ring the moment it lands, with the rule explained. Hints settle the next branch for you.</li>
+    </ul>
+    <div class="row"><button class="ghost" id="howClose">Got it</button><button class="go" id="howPlay">Show me</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="ad" hidden>
+  <div class="card">
+    <div class="label" style="text-align:center">Test ad</div>
+    <h2 id="adTitle">Thanks for playing Nest Rows</h2>
+    <p>Real video ads play here in the app store version. This stand-in lets you try the reward flow.</p>
+    <div class="adbar"><i id="adFill"></i></div>
+    <div class="row"><button class="ghost" id="adSkip">Close without reward</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const ease = t => 1 - Math.pow(1 - clamp(t, 0, 1), 3);
+
+/* ---------- puzzle core (same code as tools/solver.js) ---------- */
+/* Nest Rows puzzle core, shared by the level generator (Node) and copied into the game.
+   Board: N x N, row 0 at the top. Cells: '.' open branch, 'T' a nest hollow (tree), 'o' an owl (solution only).
+   Rules: every nest has exactly one owl on an orthogonally neighbouring cell, every owl sits beside exactly one
+   nest, owls never touch (not even diagonally), and the counts along the edges say how many owls roost in each
+   row and column. The solution is unique for every level the generator keeps. */
+
+function parse(n, str) {
+  const cells = str.split(''), trees = [], sol = [];
+  for (let i = 0; i < n * n; i++) { if (cells[i] === 'T') trees.push(i); if (cells[i] === 'o') sol.push(i); }
+  const rows = new Array(n).fill(0), cols = new Array(n).fill(0);
+  for (const i of sol) { rows[Math.floor(i / n)]++; cols[i % n]++; }
+  const tree = new Uint8Array(n * n); for (const t of trees) tree[t] = 1;
+  // a cell can hold an owl only if it is open and touches exactly one nest
+  const cand = new Uint8Array(n * n), treeOf = new Int16Array(n * n).fill(-1);
+  for (let i = 0; i < n * n; i++) {
+    if (tree[i]) continue;
+    const ns = orth(n, i).filter(j => tree[j]);
+    if (ns.length === 1) { cand[i] = 1; treeOf[i] = ns[0]; }
+  }
+  return { n, trees, tree, cand, treeOf, rows, cols, sol, str };
+}
+function orth(n, i) { const r = Math.floor(i / n), c = i % n, o = []; if (r) o.push(i - n); if (r < n - 1) o.push(i + n); if (c) o.push(i - 1); if (c < n - 1) o.push(i + 1); return o; }
+function around(n, i) { const r = Math.floor(i / n), c = i % n, o = []; for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { if (!dr && !dc) continue; const rr = r + dr, cc = c + dc; if (rr >= 0 && rr < n && cc >= 0 && cc < n) o.push(rr * n + cc); } return o; }
+
+// Counts solutions (stops at `limit`). Backtracking cell by cell with row, column, nest and touching checks.
+function countSolutions(pz, limit = 2) {
+  const { n, cand, treeOf, rows, cols, trees } = pz, N = n * n;
+  const owl = new Uint8Array(N), rowLeft = rows.slice(), colLeft = cols.slice(), treeOwls = new Uint8Array(N);
+  // for every nest, the index of the last cell that could hold its owl: once we pass it the nest is settled
+  const lastCand = new Int16Array(N).fill(-1), candLeft = new Int16Array(N);
+  for (let i = 0; i < N; i++) if (cand[i]) { lastCand[treeOf[i]] = i; candLeft[treeOf[i]]++; }
+  const rowCandLeft = new Int16Array(n), colCandLeft = new Int16Array(n);
+  for (let i = 0; i < N; i++) if (cand[i]) { rowCandLeft[Math.floor(i / n)]++; colCandLeft[i % n]++; }
+  const treesEndingAt = Array.from({ length: N }, () => []); for (const t of trees) if (lastCand[t] >= 0) treesEndingAt[lastCand[t]].push(t);
+  for (const t of trees) if (lastCand[t] < 0) return 0;   // a nest with no possible owl
+  const ar = Array.from({ length: N }, (_, i) => around(n, i));
+  let found = 0;
+  function go(i) {
+    if (found >= limit) return;
+    if (i === N) { found++; return; }
+    const r = Math.floor(i / n), c = i % n;
+    if (cand[i]) {
+      // try an owl here
+      let ok = rowLeft[r] > 0 && colLeft[c] > 0 && treeOwls[treeOf[i]] === 0;
+      if (ok) for (const j of ar[i]) if (owl[j]) { ok = false; break; }
+      if (ok) {
+        owl[i] = 1; rowLeft[r]--; colLeft[c]--; treeOwls[treeOf[i]]++;
+        step(i, r, c);
+        owl[i] = 0; rowLeft[r]++; colLeft[c]++; treeOwls[treeOf[i]]--;
+      }
+      rowCandLeft[r]--; colCandLeft[c]--; candLeft[treeOf[i]]--;
+      // leave it empty, if the counts can still be met
+      if (rowLeft[r] <= rowCandLeft[r] && colLeft[c] <= colCandLeft[c] && (treeOwls[treeOf[i]] || candLeft[treeOf[i]] > 0)) step(i, r, c);
+      rowCandLeft[r]++; colCandLeft[c]++; candLeft[treeOf[i]]++;
+    } else step(i, r, c);
+  }
+  function step(i, r, c) {
+    if (c === n - 1 && rowLeft[r] !== 0) return;
+    for (const t of treesEndingAt[i]) if (treeOwls[t] !== 1) return;
+    go(i + 1);
+  }
+  // column candidates below the current row only matter per row; the simple version above is enough for N<=8
+  go(0);
+  return found;
+}
+
+/* Human-style deduction. state: 0 unknown, 1 owl, 2 empty (tuft). Returns the first forced cell it finds as
+   { i, v, why } or null. Used for hints in the game and to grade levels in the generator. */
+const WHY = {
+  far: 'No nest next to this branch, so no owl can roost here.',
+  two: 'This branch touches two nests. An owl only ever guards one, so it stays empty.',
+  touch: 'Owls never sit next to each other, not even diagonally.',
+  rowFull: 'This row already has all its owls.',
+  colFull: 'This column already has all its owls.',
+  rowNeed: 'This row still needs owls, and this is the only place left for one.',
+  colNeed: 'This column still needs owls, and this is the only place left for one.',
+  guarded: 'This nest already has its owl, so the other branches around it stay empty.',
+  lonely: 'This nest has only one branch left where its owl could sit.',
+  pack: 'The owls in this row have to spread out to fit, which forces this cell.',
+  packCol: 'The owls in this column have to spread out to fit, which forces this cell.',
+};
+function deduce(pz, playerState) {
+  const { n, cand, treeOf, rows, cols, trees } = pz, N = n * n;
+  // nests are never unknown cells: treat them as settled so no rule points at one
+  const state = Uint8Array.from(playerState); for (const t of trees) state[t] = 2;
+  for (let i = 0; i < N; i++) if (state[i] === 0 && !cand[i]) return { i, v: 2, why: orth(n, i).some(j => pz.tree[j]) ? WHY.two : WHY.far };
+  for (let i = 0; i < N; i++) if (state[i] === 1) for (const j of around(n, i)) if (state[j] === 0) return { i: j, v: 2, why: WHY.touch };
+  for (const t of trees) {
+    const ns = orth(n, t).filter(j => cand[j] && treeOf[j] === t);
+    const owls = ns.filter(j => state[j] === 1).length, open = ns.filter(j => state[j] === 0);
+    if (owls === 1 && open.length) return { i: open[0], v: 2, why: WHY.guarded };
+    if (owls === 0 && open.length === 1) return { i: open[0], v: 1, why: WHY.lonely };
+  }
+  for (let r = 0; r < n; r++) {
+    const line = []; for (let c = 0; c < n; c++) line.push(r * n + c);
+    const f = lineRule(line, rows[r], state, 'row'); if (f) return f;
+  }
+  for (let c = 0; c < n; c++) {
+    const line = []; for (let r = 0; r < n; r++) line.push(r * n + c);
+    const f = lineRule(line, cols[c], state, 'col'); if (f) return f;
+  }
+  return null;
+}
+function lineRule(line, need, state, kind) {
+  const owls = line.filter(i => state[i] === 1).length, open = line.filter(i => state[i] === 0);
+  if (!open.length) return null;
+  if (owls === need) return { i: open[0], v: 2, why: kind === 'row' ? WHY.rowFull : WHY.colFull };
+  if (owls + open.length === need) return { i: open[0], v: 1, why: kind === 'row' ? WHY.rowNeed : WHY.colNeed };
+  // packing: open cells form runs; a run of length L holds at most ceil(L/2) owls
+  const runs = []; let cur = [];
+  for (let k = 0; k < line.length; k++) { if (state[line[k]] === 0) cur.push(line[k]); else if (cur.length) { runs.push(cur); cur = []; } }
+  if (cur.length) runs.push(cur);
+  const cap = runs.reduce((a, r) => a + Math.ceil(r.length / 2), 0);
+  if (cap === need - owls) for (const run of runs) if (run.length % 2 === 1) return { i: run[0], v: 1, why: kind === 'row' ? WHY.pack : WHY.packCol };
+  return null;
+}
+// solves by deduction alone; returns { solved, steps, packs } (packs = how many packing deductions it needed)
+function logicSolve(pz) {
+  const state = new Uint8Array(pz.n * pz.n); let steps = 0, packs = 0;
+  for (;;) {
+    const f = deduce(pz, state); if (!f) break;
+    state[f.i] = f.v; steps++; if (f.why === WHY.pack || f.why === WHY.packCol) packs++;
+    if (f.v === 1) for (const j of around(pz.n, f.i)) if (state[j] === 0) state[j] = 2;
+  }
+  const solved = pz.sol.every(i => state[i] === 1) && [...state].filter(v => v === 1).length === pz.sol.length;
+  return { solved, steps, packs, state };
+}
+// does the current set of owls satisfy every rule?
+function check(pz, owls) {
+  const { n, cand, treeOf, rows, cols, trees } = pz;
+  const bad = { rows: [], cols: [], trees: [], owls: [] };
+  const rc = new Array(n).fill(0), cc = new Array(n).fill(0), tc = new Uint8Array(n * n), set = new Uint8Array(n * n);
+  for (const i of owls) set[i] = 1;
+  for (const i of owls) {
+    rc[Math.floor(i / n)]++; cc[i % n]++;
+    if (!cand[i]) bad.owls.push(i); else tc[treeOf[i]]++;
+    if (around(n, i).some(j => set[j])) bad.owls.push(i);
+  }
+  for (let k = 0; k < n; k++) { if (rc[k] !== rows[k]) bad.rows.push(k); if (cc[k] !== cols[k]) bad.cols.push(k); }
+  for (const t of trees) if (tc[t] !== 1) bad.trees.push(t);
+  const ok = !bad.rows.length && !bad.cols.length && !bad.trees.length && !bad.owls.length;
+  return { ok, bad };
+}
+
+/* ---------- levels: [size, board], made by tools/generate.js ---------- */
+const LEVELS = [[3,"....o..T."],[3,"...T.oo.T"],[4,"........T.o.o.T."],[4,"..o...T.T..oo..T"],[5,"....T....o.o.T..T.o......"],[6,"......o.o...T.T...T.....o.T.o...o.T."],[6,"....To...o..To.T.........oTT.....o.."],[6,"To.oT......T...o.o...T....oT........"],[6,"oTTo.........T..oT.o........To......"],[6,"....o...oTT.............oTT..T..o..o"],[6,"..........To.oT.......oT..oT..oT..oT"],[6,"....To..oT..T...Too..o.....T.o.....T"],[6,"o.....TTo.To..........ToTo........To"],[6,".To.oToT......oT..o.....T....o.....T"],[6,"T...o.o.oTT........oT.o...T.T...o.To"],[6,"....To.T.T...o.o.o.....To.oTT.T...o."],[6,"To..oT......o...o.T...T.T.o.T.o.T.o."],[6,"..o..o..TT.TTo.o..T.....o..T.T...o.o"],[6,"..o.oToTT.......T..To.o.T.....o.oT.."],[6,"o.o.oTTTT....o..o.....T.T....To....o"],[6,".To.o.....T.o.oT..T......o...o.TTo.T"],[6,"....oT.o.....T....o.o.o.TTTTTT.o.o.o"],[6,".oT..o...T.T...o...o...oTTT.TTo.o.o."],[6,"o.oT.TT....o..To..To....T.....o.oTTo"],[6,"o.To.oT....TT.....o...To.T.o...o.TTo"],[7,"oT........o...o..T...TTo.oT........T.o....o.T...."],[7,".o......T.To..........T.To...o.....T.....oo.oT..T"],[7,"To.........To..oT.......T......o..T......oTo.oT.."],[7,"T.T..T.o.o..o........o.oT...T..To....oT.........."],[7,"o.To.oTT...........To....T..o...o..T....T.To...o."],[7,"To.oT.........T..o.o.o..T.T....T......o.o.To...T."],[7,"To.o.o....T.T..o..o...T..T..oT......T.To...o....."],[7,"..oT........oT..T......o.T.oT...o.To.o...T..T...o"],[7,"..o.o.ToTT.T.o.......o..To.oTTo...T....oT........"],[7,"T.To.Too.........oT...o...To.T..oT...T......o..oT"],[7,".....Too......TTo..oTT......o..o.oT...T...To..To."],[7,"To.oT.........oT.o......T.oTo......T.To.T..oT..o."],[7,"TTo...oo.....T...To...o...To.T..oT..T....o.o.To.T"],[7,"..To.o.o....T.T.To....o....TTT..T.oo.o.o....T..To"],[7,"T...T.To.o.o.o..T....o...o..T.oTT..T......o.oT.oT"],[7,"...To.TTo....o....o..o...T..T.T..o...o.TTToT..o.o"],[7,".o.oT...T...Too..To..T.o...o..T.oTT.T.T..T.o.o..o"],[7,"oTTo.oT.......o.To...T....oTTo.oT..T.T..T.o.o..o."],[7,"o.oT.ToT..To...o......TT.To...o....oT..o.o.To.T.T"],[7,"....To.To.oT.......oT.TTo....o...o.T.T.TTTo.o.o.o"],[8,".oT...............To.o...T..TT...o..o.........oT...o....To.TTo.."],[8,"....T.......o.To.....T.......o.o..To...T.o...o..TT...T..o.oT...."],[8,"...o.......T.oT..........oT..o.T.....T.oT.......o.o....o..T..oTT"],[8,"...To.T.To....o.T.T.o...o.o.TTo.....T.......o...........To..To.."],[8,"o.o..T..T.T..o...oT...To...........o....o..T....TTo........To.oT"],[8,".To.....oT....o..To...T.....oT..To.....o...To..T..oT..T.......o."],[8,".o.......TT...o.o.o...TTT....T.o.....o..oT.o..To...T.T...oT..o.."],[8,".oTTo..o.......T....o.....o.T.o...T...TToT.....o....o.T...oTT.o."],[8,"o..o.T..T..T.o.o.To....T..............oT..o......TTT.T.T.o.o.o.o"],[8,"oT.o.oT....T...o.....oTT.......T.T...o.o.o.oTT..........To.oT.To"],[8,"...o...oT..T...To.o.T.....T.o.oToT.T.......o....o....o.oT.oT.T.T"],[8,"..To.To.To.........T.oT.To.o...T.....o.o.oTT.T..T..o..o.o.....T."],[8,"..oTT..T....o..ooT..........To.o...o...TTo.TTo..T.T....To.o....o"],[8,"oT....To..To....o...To..T.To..T.T.T...o.o.o.oT........o.oT.oT.T."],[8,"oT..To.o...o..TT.o.T..o.TT......o.To.oT........TTo.oT..o.....oT."],[8,".o.oT..o.T..To.T..oT.......To...TTo....To...o..o..oTT...oT....To"],[8,".To.T...o...o.oTTTo....T.......o..o.To....TT..To...o.oT.To....To"],[8,"oTT.T.o...o.o.T.o.....ToTTo..........o.o..oT.T.ToT...T.T..To.o.o"],[8,"........To.o..ToT..T.oT.o.o...To..T.To...o..T.ToTT..o...o.oT..To"],[8,"T......oo.o.o..T..TTT.o.oT.o.TT......o...To.T.TooT..o.....oT..To"]];
+const DAILY = [[7,".T......o..oT.......oTo..oTT...T...o..o...T....oT"],[7,"o.o.To.T.T...........To.To.o......T.o....T.T.To.o"],[7,"o.....TT.o.o.o..T.T...T....o.o.To.T.......To.oTTo"],[7,".....To.oT........T.T..o.o.ooTT.........To...oT.."],[7,"....T......o..o.oT...T..T.T.To.o.o.....T.ToT..o.o"],[7,"T.T...oo.o.oTT.....T.o.oT.o.T..........o.T.To.T.o"],[7,".............ToTTo..o.......o.To.ToT.T......o.oT."],[7,".....To.o.oT...T...oT..To........o....T.T.To.o.To"],[7,"o....ToT..oT..To..TTo....o..oT....o....T.TTo..o.."],[7,".o.o....T.T..o..TTo.T..o....o......TTo..oT......."],[7,"oT....o..T...To.o.To.T......T.oT.o.o...TT.....o.."],[7,"o..To.oTTo...T....o..oT..TTo.......T.To..oo.....T"],[7,"o....ToT.To........To..To...........T.T.T..o.o.o."],[7,"o.o.To.T.T.........oTo......T..oT........ooT.oT.T"],[7,"o.oT.oTT......To.oT..T....oTo........To.o.oT...T."],[7,".To..oT.......T......o.To..o......TT.oT...o....To"],[7,"oT.......o.o..T.T.T..o.........oTToo......T.To.To"],[7,".o...To.T..oT......To.o......T.To.ooT...TT..To.o."],[7,"o...oT.T.....T.To...o....oT......T..T.o.o..o.T..."],[7,"..To..ToT....o.......o....o.T.T..T...o...ToT.To.o"],[7,".o.oT..TT..To.o.o......T..oToTTo...........To..oT"],[7,".....T..o...o..T.....oTT..oT..o...To.....oT..oT.."],[7,"o......T.oT.oT........o.oT...T...o.o.o..T.T.TTo.."],[7,"...To.TT.oT..oo...oT...o...T..T...o.o.o....T.T.To"],[7,".....T......o.To..T......o.To.o...oT.T.oT......To"],[7,".oTTo.......T.o.oT.o.T...........oTo.To..TT.....o"],[7,"oT.oT......To.o.o...TT.T...o...To..o.oT...T..To.."],[7,".....oTTo...........o.oTT..TT..o...o....o....oTT."],[7,"o.oT...T....oT........oTTo.T......o.oTT......o.To"],[7,"o..oTToT........To.........oo.o...TTTT...T.o.oT.o"],[7,".....oT..oT...T...To.o.oT........To.......To.To.."],[7,"To.o.To...T....oTTo.o......T..oTT......o...oT...."],[7,"..To.oToT..T....T.o..o.o....T..TTo....o..T.oT...o"],[7,"oT..TTo..T.o....o...T....T.ooT..o....T......o...."],[7,"o.oT...TT...To.o.........To...o......TT..TTo.o..o"],[7,"..To.o..T...TT.o.oT.o........o.oT..TTT....o.o.To."],[7,".......oT..oT...oT.........TT..To.oo.oT.......oT."],[7,"To.o.oT...T........o...oT.TT......oo.oT.T.T....o."],[7,"T....o.o.oTTT.....o.To.oT..oT...T...To.o.o......T"],[7,".....oTT......o.o..T...TT.o..o.o....T..To....oT.."],[7,".oTTo.T......ooT.o......T...o....ToT..oT.......oT"],[7,"oT..T.T..o.o.o..T.....o...To.TTo....T...To.o.oT.."],[7,"....T.o..o.o.T..T.....o......TTo....T....o.o.oT.T"],[7,".o.oTTo.T.....T....o.o....T..To....o...To.T.oT..."],[7,"oT..TTo..o.o..o.T..ToT..oT........o...T..TTo.o..."],[7,"oT..o.o....T.T.........o.T.o..T.o.To......T....To"],[7,"o.....TT.....o...To..T.o....o.TTo...T.T.To.o.o..."],[7,"..T.To.o.o....TT...To.o.o......T.To....oT..oT..To"],[7,"..To........TooT.......TTo..o.o....T....T...oT.o."],[7,"oT....T......o..T.o..o.o.TT.T..T.o....o..ToT....o"],[7,"o..o.oTT..T....o...oTTT.....o.o...T..T...ooT.To.."],[7,"oT...T....o.o.o.TT...T.o.......T.T.To.o.o........"],[7,"......T....o.ooT..T.......TooT..T...To.o.ooT....T"],[7,"...o.oTTo.T.......o.T..oTT.ooT.......T.oTT..o...o"],[7,".T......o........o.To.o.T....T...To...oT..oT...To"],[7,"o.oTTo.T..............oT.o.oT...T.To....T...To.o."],[7,"T....oTo..oT...T...o..o.o.T....TT.TT.T.o.oo.o...."],[7,"T...o.To...T.o.......T..o.oTo..T....To..T......o."],[7,"...o.oToT.T.......oT........oTTo.oT.......oT.oT.."],[7,"o.o..o.T.T..TT.oT...o....oT.......oTTo...To....oT"]];
+// [name, subtitle, first level index]
+const WOODS = [['Saplings', 'Tiny trees to learn on', 0], ['Hollow Grove', 'Small trees, first owls', 5], ['Moonfall Pines', 'Taller trees, more nests', 25], ['Old Oak', 'The big tree', 45]];
+const woodIdx = i => { let w = 0; while (w + 1 < WOODS.length && i >= WOODS[w + 1][2]) w++; return w; };
+const woodOf = i => WOODS[woodIdx(i)];
+const woodEnd = w => w + 1 < WOODS.length ? WOODS[w + 1][2] : LEVELS.length;
+// a nudge on each starter board
+const SAPLING_TIPS = [
+  'One tree, one owl. Owls only land on the branches growing out of a tree.',
+  'Two trees, two owls. Owls never touch, not even corner to corner.',
+  'A 0 means no owl in that row or column. Tap a branch twice to leave a tuft there: a note that no owl goes there.',
+  'When a row or column has all its owls, the rest of its branches are out. Tap them twice to tuft them.',
+  'If a tree has only one open branch left, its owl goes there.',
+];
+/* ---------- tutorial: a hand-made 5x5 tree, one rule per step ---------- */
+const TUT_BOARD = [5, '.....' + '.T.To' + '.o...' + '.....' + 'oT...'];
+const TUT_STEPS = [
+  { text: 'Owls can only land on branches. Each nest tree grows branches into the squares right next to it. The other squares are open sky.', run: () => { G.glowBranches = performance.now(); } },
+  { text: 'A 0 means no owl anywhere in that row or column. Tap the glowing branch twice: the first tap lands an owl, the second turns it into a tuft, a note that says no owl here.', target: 16, mark: 2, run: () => { G.glow = { rows: [0, 3], cols: [2, 3], t: performance.now() }; } },
+  { text: 'The other branches in 0 lines get tufts too. Tufts are only notes, but they make the owls easy to find.', run: () => tutTufts([1, 3, 13, 22], 'zero') },
+  { text: 'The bottom tree now has only one open branch. Tap it once to land the owl.', target: 20, mark: 1 },
+  { text: 'The left column wants 1 owl and has it now, so its other branch is out. Tap it twice to tuft it.', target: 5, mark: 2 },
+  { text: 'That leaves this tree a single open branch. Land its owl.', target: 11, mark: 1 },
+  { text: 'Owls never touch, not even corner to corner. The last tree has one branch left. Land its owl.', target: 9, mark: 1 },
+];
+function tutTufts(cells, why) { let k = 0; for (const i of cells) if (G.state[i] === 0 && !G.pz.tree[i]) { const j = i; setTimeout(() => { if (G && G.tut && G.state[j] === 0) { G.state[j] = 2; G.anim.set(j, performance.now()); sfx.tuft(); } }, 90 * k++); } }
+function tutEnter(step) {
+  G.tut.step = step; const st = TUT_STEPS[step]; G.tut.target = st.target === undefined ? -1 : st.target;
+  $('#tutStep').textContent = (step + 1) + ' / ' + TUT_STEPS.length; $('#tutText').textContent = st.text;
+  $('#tutNext').hidden = G.tut.target >= 0; $('#tutTap').hidden = G.tut.target < 0; $('#tut').hidden = false;
+  if (st.run) st.run();
+}
+function tutAdvance() { if (!G || !G.tut) return; if (G.tut.step + 1 < TUT_STEPS.length) tutEnter(G.tut.step + 1); else $('#tut').hidden = true; }
+$('#tutNext').onclick = () => { audio(); tutAdvance(); };
+
+/* ---------- save ---------- */
+const KEY = 'nestrows.v2';
+function load() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } }
+const save = Object.assign({ stars: {}, best: {}, hints: 0, noAds: false, skins: ['coral'], skin: 'coral', sound: true, music: true, autoTuft: true, sinceAd: 0, seenHow: false, tutDone: false, daily: { last: '', streak: 0, best: {} } }, load());
+function persist() { try { localStorage.setItem(KEY, JSON.stringify(save)); } catch (e) {} }
+const totalStars = () => Object.values(save.stars).reduce((a, b) => a + b, 0);
+const nextLevel = () => { for (let i = 0; i < LEVELS.length; i++) if (!save.stars[i]) return i; return LEVELS.length - 1; };
+const unlocked = i => i === 0 || !!save.stars[i - 1];
+function starsFor(hints, mistakes) { return hints === 0 && mistakes <= 1 ? 3 : hints <= 1 && mistakes <= 3 ? 2 : 1; }
+const dayKey = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+const todayKey = () => dayKey(new Date());
+const yesterdayKey = () => { const d = new Date(); d.setDate(d.getDate() - 1); return dayKey(d); };
+const dailyIndex = () => { const d = new Date(); return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 864e5) % DAILY.length; };
+const streakNow = () => (save.daily.last === todayKey() || save.daily.last === yesterdayKey()) ? save.daily.streak : 0;
+const fmtTime = s => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+
+/* ---------- owl inks (skins) ---------- */
+const INKS = {
+  coral: { body: '#ff6a4d', belly: '#f6eedb', eye: '#2a2b66', beak: '#f4b942' },
+  tawny: { body: '#f4b942', belly: '#f6eedb', eye: '#2a2b66', beak: '#ff6a4d' },
+  snowy: { body: '#f6eedb', belly: '#ffffff', eye: '#2a2b66', beak: '#f4b942' },
+  moonlit: { body: '#9d8ad9', belly: '#f6eedb', eye: '#2a2b66', beak: '#f4b942' },
+  ember: { body: '#c9452c', belly: '#f4b942', eye: '#2a2b66', beak: '#2a2b66' },
+};
+const SKINS = [
+  { id: 'coral', name: 'Coral Owl', desc: 'The first owl to roost in these woods.', stars: 0 },
+  { id: 'tawny', name: 'Tawny Owl', desc: 'Unlocks at 25 stars.', stars: 25 },
+  { id: 'snowy', name: 'Snowy Owl', desc: 'Unlocks at 60 stars.', stars: 60 },
+  { id: 'moonlit', name: 'Moonlit Owl', desc: 'Feather pack.', pack: true },
+  { id: 'ember', name: 'Ember Owl', desc: 'Feather pack.', pack: true },
+];
+const skinOwned = s => save.skins.includes(s.id) || (!s.pack && totalStars() >= s.stars);
+const inkNow = () => INKS[save.skin] || INKS.coral;
+
+/* ---------- riso drawing helpers ---------- */
+const INK = '#0e0f2e', NIGHT = '#151838', NIGHT_B = '#232758', NIGHT_SKY = '#1a1d45', STAR = '#f6e7b0', CORAL = '#ff6a4d', MOSS = '#5f8f4e', SUN = '#f4b942', PAPER = '#e9dcc1', PAPER_D = '#d8c6a0', PAPER_L = '#f6eedb';
+// paper grain: a tile of random speckles, laid over everything at low alpha
+const grainCv = document.createElement('canvas'); grainCv.width = grainCv.height = 160;
+{ const g = grainCv.getContext('2d'); for (let k = 0; k < 2600; k++) { g.fillStyle = Math.random() < 0.6 ? 'rgba(42,43,102,0.5)' : 'rgba(255,255,255,0.7)'; g.fillRect(Math.random() * 160, Math.random() * 160, 1.2, 1.2); } }
+let grainPat = null;
+function grain(ctx, w, h, a = 0.16) { if (!grainPat) grainPat = ctx.createPattern(grainCv, 'repeat'); ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = grainPat; ctx.fillRect(0, 0, w, h); ctx.restore(); }
+function blob(ctx, x, y, rx, ry) { ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); }
+// an owl, size s (cell size), centred on 0,0. Inks are printed one after another and never quite line up.
+function drawOwl(ctx, s, ink, t = 0, blink = false) {
+  const r = s * 0.36, mis = s * 0.025;
+  ctx.fillStyle = 'rgba(42,43,102,0.18)'; blob(ctx, mis * 2, s * 0.08 + mis, r * 1.02, r * 1.12); ctx.fill();
+  // ear tufts
+  ctx.fillStyle = ink.body;
+  ctx.beginPath(); ctx.moveTo(-r * 0.75, -r * 0.55); ctx.lineTo(-r * 0.95, -r * 1.35); ctx.lineTo(-r * 0.2, -r * 0.85); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(r * 0.75, -r * 0.55); ctx.lineTo(r * 0.95, -r * 1.35); ctx.lineTo(r * 0.2, -r * 0.85); ctx.closePath(); ctx.fill();
+  // body
+  blob(ctx, 0, 0, r, r * 1.1); ctx.fill();
+  // ink outline, misregistered
+  ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1.2, s * 0.045); ctx.save(); ctx.translate(mis, -mis * 0.6); blob(ctx, 0, 0, r, r * 1.1); ctx.stroke(); ctx.restore();
+  // belly
+  ctx.fillStyle = ink.belly; blob(ctx, 0, r * 0.42, r * 0.58, r * 0.5); ctx.fill();
+  ctx.strokeStyle = 'rgba(42,43,102,0.55)'; ctx.lineWidth = Math.max(1, s * 0.03);
+  for (let k = 0; k < 3; k++) { ctx.beginPath(); ctx.arc(-r * 0.25 + k * r * 0.25, r * 0.35 + (k % 2) * r * 0.18, r * 0.12, Math.PI * 0.15, Math.PI * 0.85); ctx.stroke(); }
+  // eyes: paper discs, ink rings slightly off, pupils
+  const ex = r * 0.38, ey = -r * 0.2, er = r * 0.3;
+  ctx.fillStyle = PAPER_L; blob(ctx, -ex, ey, er, er); ctx.fill(); blob(ctx, ex, ey, er, er); ctx.fill();
+  ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1.2, s * 0.045);
+  blob(ctx, -ex + mis, ey + mis * 0.5, er, er); ctx.stroke(); blob(ctx, ex + mis, ey + mis * 0.5, er, er); ctx.stroke();
+  ctx.fillStyle = ink.eye;
+  if (blink) { ctx.fillRect(-ex - er * 0.7, ey - 1, er * 1.4, 2.2); ctx.fillRect(ex - er * 0.7, ey - 1, er * 1.4, 2.2); }
+  else { const px = Math.sin(t * 0.7) * er * 0.15; blob(ctx, -ex + px, ey, er * 0.45, er * 0.5); ctx.fill(); blob(ctx, ex + px, ey, er * 0.45, er * 0.5); ctx.fill(); ctx.fillStyle = PAPER_L; blob(ctx, -ex + px - er * 0.15, ey - er * 0.18, er * 0.12, er * 0.12); ctx.fill(); blob(ctx, ex + px - er * 0.15, ey - er * 0.18, er * 0.12, er * 0.12); ctx.fill(); }
+  // beak
+  ctx.fillStyle = ink.beak; ctx.beginPath(); ctx.moveTo(-r * 0.13, ey + er * 0.75); ctx.lineTo(r * 0.13, ey + er * 0.75); ctx.lineTo(0, ey + er * 1.25); ctx.closePath(); ctx.fill();
+  // feet
+  ctx.strokeStyle = ink.beak; ctx.lineWidth = Math.max(1.2, s * 0.04); ctx.lineCap = 'round';
+  for (const sx of [-1, 1]) for (const k of [-1, 0, 1]) { ctx.beginPath(); ctx.moveTo(sx * r * 0.32, r * 0.98); ctx.lineTo(sx * r * 0.32 + k * r * 0.12, r * 1.18); ctx.stroke(); }
+}
+// a nest tree: a bare bark tree (trunk, three forked limbs) with a hollow and an owlet peeking out.
+// Guarded trees (one owl beside them) grow coral berries on their twig tips.
+const BARK = '#9a6844', LEAF_L = '#8cc276';
+const TREE_LIMBS = [[[[-0.03, -0.1], [-0.2, -0.28], [-0.35, -0.36]], 0.075], [[[0.01, -0.14], [0.05, -0.3], [-0.01, -0.45]], 0.07],
+  [[[0.04, -0.1], [0.2, -0.22], [0.35, -0.29]], 0.075], [[[-0.2, -0.28], [-0.17, -0.42]], 0.04], [[[0.2, -0.22], [0.27, -0.39]], 0.04]];
+function drawNest(ctx, s, guarded, pop = 0) {
+  const mis = s * 0.025, lw = Math.max(1.2, s * 0.04);
+  const trunk = (dx, dy) => { ctx.beginPath(); ctx.moveTo(dx - 0.36 * s, dy + 0.44 * s); ctx.quadraticCurveTo(dx - 0.23 * s, dy + 0.38 * s, dx - 0.23 * s, dy + 0.16 * s);
+    ctx.lineTo(dx - 0.14 * s, dy - 0.16 * s); ctx.lineTo(dx + 0.14 * s, dy - 0.16 * s); ctx.lineTo(dx + 0.23 * s, dy + 0.16 * s); ctx.quadraticCurveTo(dx + 0.23 * s, dy + 0.38 * s, dx + 0.36 * s, dy + 0.44 * s); ctx.closePath(); };
+  const limbs = (dx, dy, extra) => { for (const [pts, w] of TREE_LIMBS) { ctx.lineWidth = w * s + extra; ctx.beginPath(); ctx.moveTo(dx + pts[0][0] * s, dy + pts[0][1] * s); for (const [x, y] of pts.slice(1)) ctx.lineTo(dx + x * s, dy + y * s); ctx.stroke(); } };
+  ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  // ground shadow
+  ctx.fillStyle = 'rgba(42,43,102,0.16)'; ctx.beginPath(); ctx.ellipse(mis * 2, s * 0.45, s * 0.34, s * 0.06, 0, 0, 7); ctx.fill();
+  // ink underlay, misregistered, then bark on top
+  ctx.fillStyle = INK; ctx.strokeStyle = INK; trunk(mis, -mis * 0.5); ctx.lineWidth = lw * 2; ctx.stroke(); ctx.fill(); limbs(mis, -mis * 0.5, lw * 2);
+  ctx.strokeStyle = BARK; ctx.fillStyle = BARK; limbs(0, 0, 0); trunk(0, 0); ctx.fill();
+  // shade down one side of the trunk and a couple of bark lines
+  ctx.save(); trunk(0, 0); ctx.clip(); ctx.fillStyle = 'rgba(42,43,102,0.25)'; ctx.fillRect(-0.4 * s, -0.2 * s, 0.31 * s, 0.7 * s); ctx.restore();
+  ctx.strokeStyle = 'rgba(42,43,102,0.35)'; ctx.lineWidth = Math.max(1, s * 0.018);
+  ctx.beginPath(); ctx.moveTo(0.07 * s, 0.3 * s); ctx.lineTo(0.09 * s, 0.4 * s); ctx.moveTo(-0.05 * s, -0.1 * s); ctx.lineTo(-0.04 * s, -0.02 * s); ctx.stroke();
+  // hollow with the owlet: a little tawny head with ear tufts and big moon-yellow eyes that glow in the dark.
+  // Once the tree has its owl, the owlet's eyes close into happy sleepy arcs.
+  const hy = s * 0.13, u = s * 1.4;
+  ctx.fillStyle = INK; blob(ctx, 0, hy, u * 0.135, u * 0.16); ctx.fill();
+  ctx.fillStyle = '#2b1d14'; blob(ctx, 0, hy, u * 0.115, u * 0.14); ctx.fill();
+  // the owlet is clipped to the hollow, plus open air above it so it can pop its head out
+  ctx.save(); ctx.beginPath(); ctx.ellipse(0, hy, u * 0.115, u * 0.14, 0, 0, 7); ctx.rect(-u * 0.2, hy - u * 0.6, u * 0.4, u * 0.6); ctx.clip('nonzero');
+  ctx.translate(0, -pop * u * 0.11);
+  ctx.fillStyle = '#c98a5a'; blob(ctx, 0, hy + u * 0.05, u * 0.1, u * 0.09); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-u * 0.1, hy - u * 0.0); ctx.lineTo(-u * 0.085, hy - u * 0.09); ctx.lineTo(-u * 0.03, hy - u * 0.02); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(u * 0.1, hy - u * 0.0); ctx.lineTo(u * 0.085, hy - u * 0.09); ctx.lineTo(u * 0.03, hy - u * 0.02); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#f0d3ae'; blob(ctx, -u * 0.042, hy + u * 0.035, u * 0.04, u * 0.04); ctx.fill(); blob(ctx, u * 0.042, hy + u * 0.035, u * 0.04, u * 0.04); ctx.fill();
+  if (guarded) {
+    ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1.2, u * 0.02);
+    for (const sx of [-1, 1]) { ctx.beginPath(); ctx.arc(sx * u * 0.042, hy + u * 0.03, u * 0.022, Math.PI * 0.15, Math.PI * 0.85); ctx.stroke(); }
+  } else {
+    ctx.fillStyle = SUN; blob(ctx, -u * 0.042, hy + u * 0.035, u * 0.03, u * 0.03); ctx.fill(); blob(ctx, u * 0.042, hy + u * 0.035, u * 0.03, u * 0.03); ctx.fill();
+    ctx.fillStyle = INK; blob(ctx, -u * 0.042, hy + u * 0.037, u * 0.014, u * 0.017); ctx.fill(); blob(ctx, u * 0.042, hy + u * 0.037, u * 0.014, u * 0.017); ctx.fill();
+  }
+  ctx.fillStyle = SUN; ctx.beginPath(); ctx.moveTo(-u * 0.014, hy + u * 0.07); ctx.lineTo(u * 0.014, hy + u * 0.07); ctx.lineTo(0, hy + u * 0.1); ctx.closePath(); ctx.fill();
+  ctx.restore();
+  if (guarded) { ctx.fillStyle = CORAL; for (const [x, y] of [[-0.35, -0.36], [-0.01, -0.45], [0.35, -0.29], [-0.17, -0.42], [0.27, -0.39]]) { blob(ctx, x * s, y * s, s * 0.045, s * 0.045); ctx.fill(); } }
+  ctx.restore();
+}
+// one leaf, pointing along +x from (0,0)
+function leaf(ctx, len, wid) { ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(len * 0.5, -wid, len, 0); ctx.quadraticCurveTo(len * 0.5, wid, 0, 0); }
+// a branch from a nest tree (at 0,0) into the neighbouring square (dc, dr): a bare bark limb whose tip sprouts a
+// spray of green leaves in the middle of the square, where the owl lands. Tufted branches drop their leaves.
+function drawBranch(ctx, s, dc, dr, ruledOut, glow) {
+  ctx.save(); ctx.rotate(Math.atan2(dr, dc)); ctx.globalAlpha = ruledOut ? 0.45 : 1;
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const lw = Math.max(1.2, s * 0.04), mis = s * 0.025;
+  if (glow > 0) { ctx.strokeStyle = `rgba(244,185,66,${0.8 * glow})`; ctx.lineWidth = s * 0.3; ctx.beginPath(); ctx.moveTo(s * 0.3, 0); ctx.lineTo(s * 1.1, 0); ctx.stroke(); }
+  // limb (tapering) and a side twig, same ink-under-bark recipe as the tree
+  const limb = (dx, dy, extra) => {
+    ctx.lineWidth = s * 0.085 + extra; ctx.beginPath(); ctx.moveTo(dx, dy); ctx.quadraticCurveTo(dx + s * 0.4, dy - s * 0.05, dx + s * 0.62, dy - s * 0.02); ctx.stroke();
+    ctx.lineWidth = s * 0.055 + extra; ctx.beginPath(); ctx.moveTo(dx + s * 0.6, dy - s * 0.02); ctx.lineTo(dx + s * 0.98, dy); ctx.stroke();
+    ctx.lineWidth = s * 0.035 + extra; ctx.beginPath(); ctx.moveTo(dx + s * 0.62, dy - s * 0.02); ctx.lineTo(dx + s * 0.76, dy - s * 0.17); ctx.stroke();
+  };
+  ctx.strokeStyle = INK; limb(mis, -mis * 0.5, lw * 2); ctx.strokeStyle = BARK; limb(0, 0, 0);
+  if (!ruledOut) {
+    // leaf spray at the tip (the landing spot) and a bud on the twig
+    const spray = [[-1.15, 0], [-0.5, 1], [0.15, 0], [0.8, 1], [1.4, 0], [-2.0, 1], [2.1, 0]];
+    for (const pass of [0, 1]) for (const [a, c] of spray) {
+      ctx.save(); ctx.translate(s * 0.98 + (pass ? 0 : mis), pass ? 0 : -mis * 0.5); ctx.rotate(a); leaf(ctx, s * 0.22, s * 0.075);
+      if (pass) { ctx.fillStyle = c ? MOSS : LEAF_L; ctx.fill(); } else { ctx.strokeStyle = INK; ctx.lineWidth = lw * 1.6; ctx.stroke(); }
+      ctx.restore();
+    }
+    ctx.save(); ctx.translate(s * 0.76, -s * 0.17); ctx.rotate(-1.2); leaf(ctx, s * 0.12, s * 0.045); ctx.fillStyle = MOSS; ctx.fill(); ctx.restore();
+  }
+  ctx.restore();
+}
+// a tuft of grass: the player's "no owl here" mark
+function drawTuft(ctx, s, alpha = 1) {
+  ctx.save(); ctx.globalAlpha = alpha; ctx.strokeStyle = LEAF_L; ctx.lineWidth = Math.max(1.5, s * 0.06); ctx.lineCap = 'round';
+  for (const [x, h, lean] of [[-0.14, 0.26, -0.06], [0, 0.34, 0], [0.14, 0.26, 0.06]]) { ctx.beginPath(); ctx.moveTo(x * s, s * 0.22); ctx.quadraticCurveTo(x * s + lean * s, s * 0.05, x * s + lean * s * 2, s * 0.22 - h * s); ctx.stroke(); }
+  ctx.restore();
+}
+
+// the big owl on the win screen: wings, a prop and a pose for each rank
+function drawMascot(ctx, s, ink, pose, t) {
+  const r = s * 0.36, bob = Math.sin(t * 3) * s * 0.02;
+  ctx.save(); ctx.translate(0, bob);
+  const wing = (side, ang) => {
+    ctx.save(); ctx.translate(side * r * 0.95, r * 0.1); ctx.rotate(side * ang); ctx.translate(0, -r * 0.2);
+    ctx.fillStyle = ink.body; blob(ctx, 0, 0, r * 0.3, r * 0.78); ctx.fill();
+    ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1.5, s * 0.045); ctx.save(); ctx.translate(s * 0.02, -s * 0.015); blob(ctx, 0, 0, r * 0.3, r * 0.78); ctx.stroke(); ctx.restore();
+    ctx.restore();
+  };
+  const flap = Math.sin(t * 6) * 0.15;
+  if (pose === 'cheer') { wing(-1, -2.6 + flap); wing(1, -2.6 - flap); }
+  else if (pose === 'cool') { wing(-1, 0.35); wing(1, -2.2 + flap * 0.5); }
+  else { wing(-1, 0.35); wing(1, -0.35); }
+  drawOwl(ctx, s, ink, t, pose === 'sleepy');
+  if (pose === 'cheer') {
+    // party hat
+    ctx.save(); ctx.translate(r * 0.1, -r * 1.05); ctx.rotate(0.15);
+    ctx.fillStyle = SUN; ctx.beginPath(); ctx.moveTo(-r * 0.42, 0); ctx.lineTo(r * 0.42, 0); ctx.lineTo(0, -r * 1.05); ctx.closePath(); ctx.fill();
+    ctx.save(); ctx.clip(); ctx.fillStyle = CORAL; for (let k = 0; k < 4; k++) ctx.fillRect(-r * 0.6, -r * 0.95 + k * r * 0.26, r * 1.2, r * 0.1); ctx.restore();
+    ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1.5, s * 0.045); ctx.beginPath(); ctx.moveTo(-r * 0.42 + 2, 2); ctx.lineTo(r * 0.42 + 2, 2); ctx.lineTo(2, -r * 1.05 + 2); ctx.closePath(); ctx.stroke();
+    ctx.fillStyle = CORAL; blob(ctx, 0, -r * 1.05, r * 0.14, r * 0.14); ctx.fill();
+    ctx.restore();
+  } else if (pose === 'cool') {
+    // sunglasses and a party blower
+    ctx.fillStyle = INK; ctx.fillRect(-r * 0.72, -r * 0.42, r * 1.44, r * 0.34);
+    ctx.fillStyle = 'rgba(246,238,219,0.35)'; ctx.fillRect(-r * 0.62, -r * 0.38, r * 0.3, r * 0.08); ctx.fillRect(r * 0.14, -r * 0.38, r * 0.3, r * 0.08);
+    const len = r * (0.5 + 0.45 * Math.max(0, Math.sin(t * 2.2)));
+    ctx.strokeStyle = CORAL; ctx.lineWidth = Math.max(2, s * 0.06); ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(r * 0.1, r * 0.1); ctx.lineTo(r * 0.1 + len, r * 0.1 - len * 0.25); ctx.stroke();
+    ctx.strokeStyle = SUN; ctx.lineWidth = Math.max(1.5, s * 0.035); ctx.beginPath(); ctx.arc(r * 0.1 + len, r * 0.1 - len * 0.25 - r * 0.12, r * 0.12, 0, Math.PI * 1.6); ctx.stroke();
+  } else {
+    ctx.fillStyle = PAPER_L; ctx.font = `${Math.round(s * 0.12)}px "Rammetto One", sans-serif`; ctx.textAlign = 'center';
+    for (let k = 0; k < 3; k++) { const ph = (t * 0.6 + k * 0.33) % 1; ctx.globalAlpha = 1 - ph; ctx.fillText('z', r * 0.9 + ph * r * 0.5 + k * r * 0.15, -r * 0.8 - ph * r * 0.9); }
+    ctx.globalAlpha = 1;
+  }
+  ctx.restore();
+}
+
+/* ---------- sound ---------- */
+let AC = null, master = null, musicBus = null;
+function audio() {
+  if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); master = AC.createGain(); master.gain.value = 0.7; master.connect(AC.destination); musicBus = AC.createGain(); musicBus.gain.value = save.music ? 0.3 : 0; musicBus.connect(master); } catch (e) { return null; } }
+  if (AC.state === 'suspended') AC.resume();
+  return AC;
+}
+function tone(f, t, dur, type = 'sine', vol = 0.2, to = master, slide = 0) {
+  const o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.setValueAtTime(f, t); if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(to); o.start(t); o.stop(t + dur + 0.05);
+}
+function noise(t, dur, vol, freq, q = 1, to = master) {
+  const n = AC.createBufferSource(), b = AC.createBuffer(1, Math.ceil(AC.sampleRate * dur), AC.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const f = AC.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q;
+  const g = AC.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  n.buffer = b; n.connect(f); f.connect(g); g.connect(to); n.start(t);
+}
+// a soft two-note hoot: sine with a little vibrato, like a tawny owl
+function hoot(t, f = 392, vol = 0.14, to = master) {
+  const o = AC.createOscillator(), g = AC.createGain(), v = AC.createOscillator(), vg = AC.createGain();
+  o.type = 'sine'; o.frequency.setValueAtTime(f, t); v.frequency.value = 5.5; vg.gain.value = 6; v.connect(vg); vg.connect(o.frequency);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.05); g.gain.setValueAtTime(vol, t + 0.18); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.42);
+  o.connect(g); g.connect(to); o.start(t); v.start(t); o.stop(t + 0.5); v.stop(t + 0.5);
+}
+const sfx = {
+  ok: () => save.sound && audio(),
+  perch() { if (!this.ok()) return; const t = AC.currentTime; hoot(t, 440, 0.12); noise(t, 0.08, 0.06, 1800, 0.6); },
+  unperch() { if (!this.ok()) return; noise(AC.currentTime, 0.1, 0.08, 1200, 0.5); },
+  tuft() { if (!this.ok()) return; tone(1200, AC.currentTime, 0.05, 'triangle', 0.05, master, 900); },
+  bump() { if (!this.ok()) return; tone(110, AC.currentTime, 0.14, 'sine', 0.22, master, 70); },
+  undo() { if (!this.ok()) return; tone(520, AC.currentTime, 0.07, 'triangle', 0.06, master, 380); },
+  chime() { if (!this.ok()) return; const t = AC.currentTime; [523, 659, 784, 1047].forEach((f, i) => tone(f, t + i * 0.09, 0.4, 'triangle', 0.08)); },
+  // the owlets join in: the big owls hoot, the little ones answer higher up
+  chorus() { if (!this.ok()) return; const t = AC.currentTime; hoot(t, 392, 0.13); hoot(t + 0.5, 330, 0.13); hoot(t + 1.1, 392, 0.1); hoot(t + 1.25, 494, 0.08); hoot(t + 1.75, 660, 0.07); hoot(t + 1.92, 784, 0.06); },
+  owlet() { if (!this.ok()) return; const t = AC.currentTime + 0.22; hoot(t, 698, 0.06); hoot(t + 0.17, 784, 0.05); },
+  star(i) { if (!this.ok()) return; tone([660, 830, 990][i], AC.currentTime, 0.3, 'triangle', 0.1); },
+};
+// slow night lullaby: a plucked lilt, a deep bass, the odd hoot and a breath of wind
+const music = {
+  on: false, next: 0, step: 0,
+  chords: [[57, 60, 64], [53, 57, 60], [55, 59, 62], [57, 60, 64]],
+  tick() {
+    if (!save.music || !AC || !this.on) return;
+    const spb = 60 / 72 / 2;
+    while (this.next < AC.currentTime + 0.25) {
+      const t = this.next, s = this.step, ch = this.chords[Math.floor(s / 16) % 4], mf = m => 440 * Math.pow(2, (m - 69) / 12);
+      if (s % 2 === 0) { const pat = [0, 1, 2, 1, 0, 2, 1, 2][(s / 2) % 8]; tone(mf(ch[pat] + 12), t, 0.5, 'triangle', 0.07, musicBus); }
+      if (s % 8 === 0) tone(mf(ch[0] - 12), t, 0.9, 'sine', 0.18, musicBus);
+      if (s % 32 === 20) hoot(t, mf(ch[2]), 0.06, musicBus);
+      if (s % 64 === 0) noise(t, 3.2, 0.03, 400, 0.3, musicBus);
+      this.next += spb; this.step++;
+    }
+  },
+  start() { if (!audio()) return; if (!this.on) { this.on = true; this.next = AC.currentTime + 0.1; } musicBus.gain.setTargetAtTime(save.music ? 0.3 : 0, AC.currentTime, 0.2); },
+};
+
+/* ---------- game state ---------- */
+const cv = $('#cv'), ctx = cv.getContext('2d');
+let W = 0, H = 0, DPR = 1, cs = 40, bx = 0, by = 0;
+let G = null;
+function resize() {
+  const r = $('#stage').getBoundingClientRect(); DPR = Math.min(2.5, window.devicePixelRatio || 1);
+  W = r.width; H = r.height; cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0); grainPat = null;
+  if (G) layout();
+}
+function layout() {
+  const n = G.pz.n, pad = 14, panel = G.tut ? Math.min(210, H * 0.34) : 0;   // the tutorial card sits under the board
+  cs = Math.floor(Math.min((W - pad * 2) / (n + 1), (H - panel - pad * 2 - 24) / (n + 1)));
+  bx = Math.round((W - cs * (n + 1)) / 2 + cs); by = Math.round((H - panel - cs * (n + 1)) / 2 + cs);
+}
+function startLevel(idx, daily = false, tut = false) {
+  hideAll(); $('#menu').hidden = true; $('#tut').hidden = true;
+  const [n, str] = tut ? TUT_BOARD : daily ? DAILY[idx] : LEVELS[idx], pz = parse(n, str);
+  G = { idx, daily, tut: tut ? { step: 0, target: -1 } : null, pz, state: new Uint8Array(n * n), hist: [], hints: 0, mistakes: 0, t0: performance.now(), time: 0, solved: false, anim: new Map(), bad: null, badT: 0, hintCell: -1, hintT: 0, winT: 0, glow: null, shakeT: 0 };
+  skyFill(); layout(); updateHud(); flash('');
+  $('#hudLvl').innerHTML = tut ? 'Tutorial<small>Saplings</small>' : daily ? `Daily Roost<small>${new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' })}</small>` : `Level ${idx + 1}<small>${woodOf(idx)[0]} · ${n}×${n}</small>`;
+  $('#hintBtn').disabled = tut;
+  if (tut) tutEnter(0);
+  else if (!daily && idx < SAPLING_TIPS.length && !save.stars[idx]) flash(SAPLING_TIPS[idx], 5000);
+  else if (!daily && idx < 8 && !save.stars[idx]) flash('Tip: tap once for an owl, twice for a tuft, three times to clear.', 5000);
+  music.start();
+}
+// squares with no branch are open sky (state 4): nothing can land there and nothing needs marking
+function skyFill() { const pz = G.pz; for (let i = 0; i < G.state.length; i++) if (!pz.tree[i] && !pz.cand[i]) G.state[i] = 4; }
+function owlsPlaced() { let k = 0; for (let i = 0; i < G.state.length; i++) if (G.state[i] === 1) k++; return k; }
+function updateHud() {
+  if (!G) return;
+  const placed = owlsPlaced(), total = G.pz.trees.length;
+  $('#owlsN').textContent = placed + '/' + total; $('#hudOwls').classList.toggle('done', G.solved);
+  $('#hintN').textContent = save.hints > 0 ? save.hints : '▶ Ad'; $('#undoBtn').disabled = !G.hist.length || G.solved || !!G.tut;
+}
+let flashTimer = 0;
+// messages stay until the player taps them away or makes the next mark (ms only sets a minimum they stay for)
+function flash(msg, ms = 2600) { const h = $('#hint'); clearTimeout(flashTimer); if (!msg) { h.hidden = true; return; } h.textContent = msg; h.hidden = false; h.style.opacity = 1; h.dataset.until = performance.now() + ms; }
+$('#hint').onclick = () => flash('');
+function fadeFlash() { const h = $('#hint'); if (h.hidden || performance.now() < +h.dataset.until) return; h.style.opacity = 0; setTimeout(() => { if (h.style.opacity === '0') h.hidden = true; }, 400); }
+
+// one tap = one history entry; auto-tufts around a new owl ride along in the same entry
+const BAD_DELAY = 650;
+function setCell(i, v, record = true, fromHint = false) {
+  if (!G || G.solved || G.pz.tree[i]) return;
+  if (!fromHint && !G.tut) fadeFlash();
+  const changes = [[i, G.state[i]]], wasOwl = G.state[i] === 1;
+  G.state[i] = v; G.anim.set(i, performance.now());
+  const why = v === 1 ? rulesNow().badOwls.get(i) : null;
+  // tufts spread around a sound owl (state 3 = placed by the game), and leave again when that owl goes
+  if (v === 1 && !why && save.autoTuft && !G.tut) for (const j of around(G.pz.n, i)) if (G.state[j] === 0 && !G.pz.tree[j]) { changes.push([j, 0]); G.state[j] = 3; }
+  if (wasOwl) for (const j of around(G.pz.n, i)) if (G.state[j] === 3 && !around(G.pz.n, j).some(k => G.state[k] === 1)) { changes.push([j, 3]); G.state[j] = 0; }
+  if (record) G.hist.push(changes);
+  if (v === 1) {
+    sfx.perch();
+    // a rule-breaking owl only counts (and gets told off) if it is still there a moment later,
+    // so double-tapping a branch to tuft it, which passes through an owl, costs nothing
+    if (why && !G.tut) { const g = G; setTimeout(() => { if (G !== g || G.solved || G.state[i] !== 1) return; const w = rulesNow().badOwls.get(i); if (!w) return; if (!fromHint) G.mistakes++; sfx.bump(); flash(RULE[w], 3600); }, BAD_DELAY); }
+    if (changes.length > 1 && !save.tuftTip) { save.tuftTip = true; persist(); if (!why) flash('The grass tufts are notes: branches that cannot hold an owl now.', 3600); }
+  }
+  else if (v === 2) sfx.tuft(); else if (wasOwl) sfx.unperch();
+  G.hintCell = -1;
+  updateHud();
+  // a full board wins at once; a wrong one is only judged if it is still full a moment later (it may be mid double tap)
+  if (owlsPlaced() === G.pz.trees.length) { const owls = []; for (let k = 0; k < G.state.length; k++) if (G.state[k] === 1) owls.push(k);
+    if (check(G.pz, owls).ok) win(); else { const g = G, snap = G.state.join(); setTimeout(() => { if (G === g && !G.solved && G.state.join() === snap) judge(); }, BAD_DELAY); } }
+}
+// which rules the board breaks right now, so wrong owls are marked the moment they land
+const RULE = {
+  touch: 'Owls never touch, not even diagonally.',
+  far: 'An owl must sit right next to a nest: above, below, left or right of it.',
+  two: 'This branch touches two nests. An owl guards one nest only, so it cannot roost here.',
+  double: 'This nest already has its owl. Each nest gets exactly one.',
+  row: 'That is more owls than this row allows.',
+  col: 'That is more owls than this column allows.',
+};
+const REASON = {
+  touch: () => 'touches another owl',
+  far: () => 'has no nest beside it',
+  two: () => 'touches two nests',
+  double: () => 'shares its nest with another owl',
+  row: i => `is in a row that wants only ${G.pz.rows[Math.floor(i / G.pz.n)]} owl${G.pz.rows[Math.floor(i / G.pz.n)] === 1 ? '' : 's'}`,
+  col: i => `is in a column that wants only ${G.pz.cols[i % G.pz.n]} owl${G.pz.cols[i % G.pz.n] === 1 ? '' : 's'}`,
+};
+function rulesNow() {
+  const { n, cand, treeOf, rows, cols, trees, tree } = G.pz, st = G.state;
+  const badOwls = new Map(), badNests = new Set(), rc = new Array(n).fill(0), cc = new Array(n).fill(0), tc = new Uint8Array(n * n);
+  let owls = 0;
+  for (let i = 0; i < n * n; i++) if (st[i] === 1) { owls++; rc[Math.floor(i / n)]++; cc[i % n]++; if (cand[i]) tc[treeOf[i]]++; }
+  for (let i = 0; i < n * n; i++) if (st[i] === 1) {
+    if (!cand[i]) badOwls.set(i, orth(n, i).some(j => tree[j]) ? 'two' : 'far');
+    else if (around(n, i).some(j => st[j] === 1)) badOwls.set(i, 'touch');
+    else if (tc[treeOf[i]] > 1) badOwls.set(i, 'double');
+    else if (rc[Math.floor(i / n)] > rows[Math.floor(i / n)]) badOwls.set(i, 'row');
+    else if (cc[i % n] > cols[i % n]) badOwls.set(i, 'col');
+  }
+  for (const t of trees) if (tc[t] > 1) badNests.add(t);
+  const full = owls >= trees.length;
+  if (full) for (const t of trees) if (tc[t] === 0) badNests.add(t);
+  return { badOwls, badNests, rc, cc, full };
+}
+function judge() {
+  const owls = []; for (let i = 0; i < G.state.length; i++) if (G.state[i] === 1) owls.push(i);
+  if (check(G.pz, owls).ok) { win(); return; }
+  const r = rulesNow(); sfx.bump(); G.shakeT = performance.now(); G.mistakes++;
+  const reasons = [...r.badOwls].map(([i, k]) => 'one ' + REASON[k](i));
+  flash(r.badOwls.size ? `${r.badOwls.size === 1 ? 'The owl marked in coral' : r.badOwls.size + ' owls marked in coral'} break${r.badOwls.size === 1 ? 's' : ''} a rule: ${reasons.join(', ')}. Tap ${r.badOwls.size === 1 ? 'it' : 'them'} to take ${r.badOwls.size === 1 ? 'it' : 'them'} off.`
+    : r.badNests.size ? 'Every nest needs its own owl right beside it. The coral nests are still waiting.'
+    : 'The coral numbers do not match yet. Each row and column needs exactly that many owls.', 4200);
+}
+function undo() { if (!G || !G.hist.length || G.solved || G.tut) return; fadeFlash(); const ch = G.hist.pop(); for (const [i, v] of ch) G.state[i] = v; G.hintCell = -1; sfx.undo(); updateHud(); }
+function clearBoard() { if (!G || G.solved) return; if (G.tut) { startLevel(0, false, true); return; } G.state.fill(0); skyFill(); G.hist = []; G.hintCell = -1; updateHud(); }
+// a hint: first undo any wrong mark, otherwise make the next deduction and say why
+function giveHint() {
+  const { pz, state } = G, n = pz.n;
+  const bad = rulesNow().badOwls;
+  for (let i = 0; i < state.length; i++) if (state[i] === 1 && !pz.sol.includes(i)) { G.hints++; applyHint(i, 0, bad.has(i) ? 'This owl is on the wrong branch: it ' + REASON[bad.get(i)](i) + '. Taking it off.' : 'This owl is on the wrong branch. Taking it off.'); return; }
+  for (let i = 0; i < state.length; i++) if (state[i] >= 2 && pz.sol.includes(i)) { G.hints++; applyHint(i, 1, 'This branch was marked empty, but an owl does roost here.'); return; }
+  const f = deduce(pz, state);
+  if (f) { G.hints++; applyHint(f.i, f.v, f.why); return; }
+  const left = pz.sol.find(i => state[i] !== 1);
+  if (left !== undefined) { G.hints++; applyHint(left, 1, 'An owl roosts here.'); }
+}
+function applyHint(i, v, why) {
+  G.hintCell = i; G.hintT = performance.now();
+  setCell(i, v, true, true);
+  G.hintCell = i;
+  flash(why, 4200);
+}
+function useHint() {
+  if (!G || G.solved || G.tut) return;
+  // no free hints: bought hints are used first, otherwise the hint comes from a short rewarded ad
+  if (save.hints > 0) { save.hints--; persist(); giveHint(); updateHud(); return; }
+  money.rewarded('Watch for a hint').then(ok => { if (!G || G.solved) return; if (ok) { giveHint(); updateHud(); } else { $('#hNote').textContent = 'No hint this time. The ad needs to finish.'; $('#needHint').hidden = false; } });
+}
+
+/* ---------- input ---------- */
+let press = null;
+function cellAt(px, py) {
+  const n = G.pz.n, c = Math.floor((px - bx) / cs), r = Math.floor((py - by) / cs);
+  return c >= 0 && c < n && r >= 0 && r < n ? r * n + c : -1;
+}
+function pointer(e) { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
+cv.addEventListener('pointerdown', e => {
+  if (!G || G.solved) return; audio();
+  const [x, y] = pointer(e), i = cellAt(x, y); if (i < 0) return;
+  press = { i, t: performance.now(), x, y, long: false };
+  // long press is a shortcut straight to a tuft (or clears a marked branch)
+  press.timer = setTimeout(() => { if (!press) return; press.long = true; tap(press.i, true); if (navigator.vibrate) navigator.vibrate(12); }, 380);
+});
+cv.addEventListener('pointermove', e => { if (!press) return; const [x, y] = pointer(e); if (Math.hypot(x - press.x, y - press.y) > 14) { clearTimeout(press.timer); press = null; } });
+const endPress = e => { if (!press) return; clearTimeout(press.timer); if (!press.long) tap(press.i, false); press = null; };
+cv.addEventListener('pointerup', endPress); cv.addEventListener('pointercancel', () => { if (press) clearTimeout(press.timer); press = null; });
+// a tap cycles a branch: empty -> owl -> tuft -> empty
+const nextMark = cur => cur === 0 ? 1 : cur === 1 ? 2 : 0;
+function tap(i, long) {
+  if (!G || G.solved || G.pz.tree[i]) { if (G && G.pz.tree[i]) flash('That is a nest hollow. Owls perch on the branches beside it.'); return; }
+  if (G.tut) {
+    if (G.tut.target < 0) return;
+    if (i !== G.tut.target || G.state[i] === 4) { sfx.bump(); G.tut.wrongT = performance.now(); flash('Tap the glowing branch first.', 1600); return; }
+    const want = TUT_STEPS[G.tut.step].mark || 1;
+    setCell(i, nextMark(G.state[i]));
+    if (G.state[i] !== want) { flash(want === 2 ? 'Tap it again to turn the owl into a tuft.' : 'Tap it again.', 2400); return; }
+    flash(''); G.tut.target = -1; $('#tutTap').hidden = true;
+    if (!G.solved) setTimeout(tutAdvance, 650);
+    return;
+  }
+  const cur = G.state[i];
+  if (cur === 4) { flash('Open sky. Owls only land on the branches growing out of a tree.', 2400); return; }
+  if (long) setCell(i, cur === 0 ? 2 : 0);
+  else setCell(i, cur === 3 ? 0 : nextMark(cur));
+}
+window.addEventListener('keydown', e => { if (e.key === 'z' && (e.ctrlKey || e.metaKey)) undo(); });
+
+/* ---------- win ---------- */
+let winTimer = 0;
+function win() {
+  G.solved = true; G.winT = performance.now(); G.time = (G.winT - G.t0) / 1000; flash('');
+  sfx.chorus(); updateHud();
+  const stars = G.tut ? 3 : starsFor(G.hints, G.mistakes);
+  if (G.tut) { save.tutDone = true; $('#tut').hidden = true; }
+  else if (G.daily) {
+    const t = todayKey(), first = save.daily.last !== t;
+    if (first) { save.daily.streak = save.daily.last === yesterdayKey() ? save.daily.streak + 1 : 1; save.daily.last = t; }
+    save.daily.best[t] = Math.min(save.daily.best[t] || 1e9, Math.round(G.time));
+    G.dailyFirst = first;
+  } else {
+    G.prevStars = save.stars[G.idx] || 0;
+    save.stars[G.idx] = Math.max(G.prevStars, stars);
+    save.best[G.idx] = Math.min(save.best[G.idx] || 1e9, Math.round(G.time));
+  }
+  persist();
+  const g = G; winTimer = setTimeout(() => { if (G === g) showWin(stars); }, 1900);
+}
+function showWin(stars) {
+  const s = $('#wStars').children;
+  for (let k = 0; k < 3; k++) { s[k].className = ''; if (k < stars) setTimeout(() => { s[k].className = 'on'; sfx.star(k); }, 250 + k * 220); }
+  const rank = G.tut ? 'That is roosting!' : stars === 3 ? (G.mistakes === 0 ? 'Hoot-standing!' : 'Every owl home') : stars === 2 ? 'Smooth' : 'All roosted';
+  $('#wTitle').textContent = rank;
+  $('#wFacts').hidden = !!G.tut;
+  const best = !G.daily && !G.tut && save.best[G.idx] === Math.round(G.time) && G.prevStars ? '<span>New best time</span>' : '';
+  $('#wFacts').innerHTML = `<span>${fmtTime(G.time)}</span>${G.hints ? `<span>${G.hints} hint${G.hints === 1 ? '' : 's'}</span>` : ''}${G.mistakes ? `<span>${G.mistakes} wrong perch${G.mistakes === 1 ? '' : 'es'}</span>` : ''}${best}`;
+  const perfect = ['No hints, no wrong perches. Every owl flew straight home.', 'Not a single wasted tap. The old owl is impressed.', 'Pure deduction, branch by branch. Flawless.'];
+  const good = ['A clean solve on a pleasantly tricky tree.', 'One small wobble, then every owl found its branch.', 'Nicely reasoned. The wood is quiet again.'];
+  const okish = ['Every nest got its owl in the end. The tree settles.', 'A few wrong perches, but you got there. Trust the numbers next time.', 'The old owl helped a little. Each hint shows a rule you can use yourself.'];
+  const pickLine = a => a[(G.idx + G.pz.trees.length) % a.length];
+  let note = G.tut ? 'Now the real woods. If you get stuck, Hint settles one branch and explains why.'
+    : stars === 3 && G.mistakes === 0 && G.hints === 0 ? pickLine(perfect) : stars >= 2 ? pickLine(good) : pickLine(okish);
+  if (G.daily) note = G.dailyFirst ? `Roost streak: ${save.daily.streak} night${save.daily.streak > 1 ? 's' : ''}. Come back tomorrow to keep it going.` : 'Already roosted tonight. A new tree grows at midnight.';
+  else if (!G.tut && G.idx === LEVELS.length - 1) note = 'That is the whole wood. More trees are growing.';
+  const unlockedSkin = SKINS.find(k => !k.pack && k.stars && totalStars() >= k.stars && !save.skins.includes(k.id));
+  if (unlockedSkin) { save.skins.push(unlockedSkin.id); persist(); note = `A new owl joins the roost: the ${unlockedSkin.name}!`; }
+  $('#wNote').textContent = note;
+  $('#wNext').textContent = G.tut ? 'Level 1' : G.daily || G.idx === LEVELS.length - 1 ? 'Back to the woods' : `Level ${G.idx + 2}`;
+  $('#wMenu').hidden = G.daily || G.tut || G.idx === LEVELS.length - 1;
+  startWinScene(stars === 3 ? 'cheer' : stars === 2 ? 'cool' : 'sleepy');
+  $('#win').hidden = false; sfx.chime();
+}
+function maybeInterstitial(then) { money.interstitial(G && !G.daily ? G.idx : 0).then(then); }
+$('#wNext').onclick = () => { if (G.tut) { startLevel(nextLevel()); return; } if (G.daily || G.idx === LEVELS.length - 1) { showMenu(); return; } const n = G.idx + 1; maybeInterstitial(() => startLevel(n)); };
+$('#wMenu').onclick = () => showMenu();
+
+/* ---------- drawing ---------- */
+// coral ring (and a little "!") on an owl or nest that breaks a rule
+function badRing(s, t, bang) {
+  const pulse = 0.5 + 0.5 * Math.sin(t / 160), shake = G.shakeT && t - G.shakeT < 450 ? Math.sin((t - G.shakeT) / 28) * 3 : 0;
+  ctx.save(); ctx.translate(shake, 0);
+  ctx.strokeStyle = CORAL; ctx.lineWidth = 3 + pulse; rr(ctx, -s / 2 + 3, -s / 2 + 3, s - 6, s - 6, 8); ctx.stroke();
+  if (bang) { ctx.fillStyle = CORAL; ctx.beginPath(); ctx.arc(s * 0.34, -s * 0.34, s * 0.14, 0, 7); ctx.fill(); ctx.fillStyle = PAPER_L; ctx.font = `${Math.round(s * 0.2)}px "Rammetto One", sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('!', s * 0.34, -s * 0.33); }
+  ctx.restore();
+}
+function rr(c, x, y, w, h, r) { c.beginPath(); c.roundRect ? c.roundRect(x, y, w, h, r) : c.rect(x, y, w, h); }
+function drawCount(x, y, v, have, over, size) {
+  ctx.font = `${size}px "Rammetto One", "Arial Rounded MT Bold", sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const col = over ? CORAL : have === v ? LEAF_L : PAPER_L;
+  ctx.fillStyle = col === PAPER_L ? 'rgba(255,106,77,0.6)' : 'rgba(0,0,0,0.45)'; ctx.fillText(v, x + 1.5, y + 1.5);
+  ctx.fillStyle = col; ctx.fillText(v, x, y);
+}
+// twinkling night sky: fixed star positions, each pulsing on its own beat
+const STARS = Array.from({ length: 70 }, (_, k) => [((k * 2654435761) >>> 0) % 1000 / 1000, ((k * 40503 + 17) * 2246822519 >>> 0) % 1000 / 1000, 0.6 + (k % 3) * 0.5, k * 1.7]);
+function nightStars(c, w, h, t) { c.fillStyle = STAR; for (const [x, y, r, ph] of STARS) { c.globalAlpha = 0.35 + 0.35 * Math.sin(t / 900 + ph); c.beginPath(); c.arc(x * w, y * h, r, 0, 7); c.fill(); } c.globalAlpha = 1; }
+// each wood has its own night: [sky top, sky bottom, board, open-sky square, extra]
+const SKIES = [
+  { top: '#2a1f52', bot: '#7a3d63', board: '#33295f', sky: '#2b2253', extra: 'dusk' },     // Saplings: purple dusk
+  { top: '#151838', bot: '#1b1f47', board: '#232758', sky: '#1a1d45', extra: 'crescent' }, // Hollow Grove: midnight
+  { top: '#0f1836', bot: '#1d2a55', board: '#20305e', sky: '#18244b', extra: 'moon' },     // Moonfall Pines: big moon over pines
+  { top: '#0a1229', bot: '#122544', board: '#1a2e52', sky: '#132442', extra: 'aurora' },   // Old Oak: northern lights
+];
+const skyNow = () => SKIES[!G || G.tut ? 0 : G.daily ? 1 : woodIdx(G.idx)];
+function crescent(c, x, y, r, a = 1) {
+  const g = c.createRadialGradient(x, y, r * 0.6, x, y, r * 2.2); g.addColorStop(0, `rgba(244,185,66,${0.22 * a})`); g.addColorStop(1, 'rgba(244,185,66,0)'); c.fillStyle = g; c.fillRect(x - r * 2.2, y - r * 2.2, r * 4.4, r * 4.4);
+  c.save(); c.beginPath(); c.rect(x - r * 2, y - r * 2, r * 4, r * 4); c.arc(x - r * 0.42, y - r * 0.3, r * 0.86, 0, 7); c.clip('evenodd');
+  c.fillStyle = SUN; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); c.restore();
+}
+function drawSky(c, w, h, t, sk) {
+  const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, sk.top); g.addColorStop(1, sk.bot); c.fillStyle = g; c.fillRect(0, 0, w, h);
+  if (sk.extra === 'dusk') { const hg = c.createRadialGradient(w * 0.5, h * 1.05, 10, w * 0.5, h * 1.05, h * 0.55); hg.addColorStop(0, 'rgba(255,140,110,0.45)'); hg.addColorStop(1, 'rgba(255,140,110,0)'); c.fillStyle = hg; c.fillRect(0, 0, w, h); }
+  if (sk.extra === 'aurora') for (let k = 0; k < 3; k++) {
+    c.save(); c.globalAlpha = 0.16 + 0.05 * Math.sin(t / 1700 + k); c.strokeStyle = ['#5ee0b0', '#7fd6e8', '#b29cf0'][k]; c.lineWidth = h * (0.05 - k * 0.012); c.lineCap = 'round';
+    c.beginPath(); for (let x = -20; x <= w + 20; x += 12) { const y = h * (0.12 + k * 0.06) + Math.sin(x / 70 + t / 2200 + k * 1.3) * h * 0.03; x < 0 ? c.moveTo(x, y) : c.lineTo(x, y); } c.stroke(); c.restore();
+  }
+  nightStars(c, w, h, t);
+  if (sk.extra === 'moon') {
+    const r = Math.min(w, h) * 0.17, mx = w * 0.72, my = h * 0.15;
+    const mg = c.createRadialGradient(mx, my, r * 0.9, mx, my, r * 2.3); mg.addColorStop(0, 'rgba(246,231,176,0.25)'); mg.addColorStop(1, 'rgba(246,231,176,0)'); c.fillStyle = mg; c.fillRect(0, 0, w, h * 0.6);
+    c.fillStyle = '#f3e3b0'; c.beginPath(); c.arc(mx, my, r, 0, 7); c.fill();
+    c.fillStyle = 'rgba(185,150,80,0.35)'; for (const [dx, dy, k] of [[-0.3, -0.2, 0.22], [0.25, 0.3, 0.16], [0.35, -0.35, 0.1], [-0.1, 0.45, 0.08]]) { c.beginPath(); c.arc(mx + dx * r, my + dy * r, k * r, 0, 7); c.fill(); }
+    // pine silhouettes along the bottom
+    c.fillStyle = '#0b1128'; for (let k = 0, x = -10; x < w + 30; k++) { const ph = 30 + ((k * 37) % 5) * 9, pw = ph * 0.55; c.beginPath(); c.moveTo(x, h); c.lineTo(x + pw / 2, h - ph); c.lineTo(x + pw, h); c.fill(); x += pw * 0.7; }
+  } else crescent(c, w - 30, 28, 14);
+}
+// fireflies: they drift over the board, and each owl you place gets one that settles on a leaf beside it
+function syncFlies(t) {
+  const { pz, state } = G, n = pz.n;
+  if (!G.flies) { G.flies = []; for (let k = 0; k < pz.trees.length + 4; k++) G.flies.push({ x: Math.random() * n, y: Math.random() * n, vx: 0, vy: 0, ph: Math.random() * 7, home: -1 }); }
+  for (const f of G.flies) if (f.home >= 0 && state[f.home] !== 1) f.home = -1;
+  for (let i = 0; i < n * n; i++) if (state[i] === 1 && !G.flies.some(f => f.home === i)) {
+    let best = null, bd = 1e9; for (const f of G.flies) if (f.home < 0) { const d = (f.x - i % n) ** 2 + (f.y - Math.floor(i / n)) ** 2; if (d < bd) { bd = d; best = f; } }
+    if (best) best.home = i;
+  }
+  for (const f of G.flies) {
+    if (f.home >= 0) { const tx = f.home % n + 0.86 + Math.sin(t / 700 + f.ph) * 0.03, ty = Math.floor(f.home / n) + 0.16 + Math.cos(t / 800 + f.ph) * 0.03; f.x += (tx - f.x) * 0.07; f.y += (ty - f.y) * 0.07; }
+    else { f.vx += (Math.random() - 0.5) * 0.004; f.vy += (Math.random() - 0.5) * 0.004; f.vx *= 0.97; f.vy *= 0.97; f.x += f.vx; f.y += f.vy;
+      if (f.x < -0.6 || f.x > n + 0.6) f.vx -= Math.sign(f.x - n / 2) * 0.004; if (f.y < -0.6 || f.y > n + 0.6) f.vy -= Math.sign(f.y - n / 2) * 0.004; }
+  }
+}
+function drawFlies(gx, gy, t) {
+  for (const f of G.flies) {
+    const x = gx + f.x * cs, y = gy + f.y * cs, a = f.home >= 0 ? 0.85 + 0.15 * Math.sin(t / 400 + f.ph) : 0.35 + 0.45 * Math.max(0, Math.sin(t / 650 + f.ph)), r = cs * 0.2;
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, `rgba(235,255,140,${0.55 * a})`); g.addColorStop(1, 'rgba(235,255,140,0)'); ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2);
+    ctx.fillStyle = `rgba(255,255,210,${a})`; ctx.beginPath(); ctx.arc(x, y, Math.max(1.3, cs * 0.035), 0, 7); ctx.fill();
+  }
+}
+function frame(t) {
+  requestAnimationFrame(frame); music.tick();
+  if (!$('#menu').hidden) { drawMenu(t); return; }
+  if (!$('#win').hidden) drawWin(t);
+  if (!G) return;
+  if (!G.solved && $('#pause').hidden) $('#timeN').textContent = fmtTime((t - G.t0) / 1000); else if (!G.solved) G.t0 += 16;
+  const { pz, state } = G, n = pz.n;
+  const SK = skyNow(); drawSky(ctx, W, H, t, SK);
+  // a faint pale grid printed a touch off true
+  const gx = bx, gy = by, gw = cs * n;
+  ctx.fillStyle = '#090a22'; ctx.fillRect(gx + 4, gy + 4, gw, gw);
+  ctx.fillStyle = SK.board; ctx.fillRect(gx, gy, gw, gw);
+  ctx.strokeStyle = 'rgba(246,238,219,0.13)'; ctx.lineWidth = 1.2;
+  for (let k = 0; k <= n; k++) { ctx.beginPath(); ctx.moveTo(gx + k * cs + 0.5, gy); ctx.lineTo(gx + k * cs + 0.5, gy + gw); ctx.stroke(); ctx.beginPath(); ctx.moveTo(gx, gy + k * cs + 0.5); ctx.lineTo(gx + gw, gy + k * cs + 0.5); ctx.stroke(); }
+  ctx.strokeStyle = INK; ctx.lineWidth = 2.2; ctx.strokeRect(gx - 1, gy - 1, gw + 2, gw + 2);
+  // open sky squares: shaded with a few printed stars
+  for (let i = 0; i < n * n; i++) if (state[i] === 4) {
+    const x = gx + (i % n) * cs, y = gy + Math.floor(i / n) * cs;
+    ctx.fillStyle = SK.sky; ctx.fillRect(x + 1, y + 1, cs - 1, cs - 1);
+    ctx.fillStyle = 'rgba(246,231,176,0.35)'; const h = (i * 2654435761) >>> 0;
+    for (let k = 0; k < 2; k++) { const sx = x + cs * (0.2 + ((h >> (k * 7)) & 63) / 63 * 0.6), sy = y + cs * (0.2 + ((h >> (k * 7 + 3)) & 63) / 63 * 0.6); ctx.beginPath(); ctx.arc(sx, sy, Math.max(1, cs * 0.03), 0, 7); ctx.fill(); }
+  }
+  // branches: one limb from each tree into every square its owl could use
+  const glowB = G.glowBranches ? Math.max(0, 1 - (t - G.glowBranches) / 3000) : 0;
+  for (let i = 0; i < n * n; i++) if (pz.cand[i]) {
+    const tr = pz.treeOf[i], dc = (i % n) - (tr % n), dr = Math.floor(i / n) - Math.floor(tr / n);
+    ctx.save(); ctx.translate(gx + (tr % n) * cs + cs / 2, gy + Math.floor(tr / n) * cs + cs / 2);
+    drawBranch(ctx, cs, dc, dr, state[i] === 2 || state[i] === 3, glowB);
+    ctx.restore();
+  }
+  const rules = G.solved ? null : rulesNow();
+  // tutorial: glowing rows and columns, and the branch to tap
+  if (G.glow) {
+    const a = 1 - (t - G.glow.t) / 2600; if (a <= 0) G.glow = null; else {
+      ctx.fillStyle = `rgba(244,185,66,${0.35 * a})`;
+      for (const r of G.glow.rows) ctx.fillRect(gx, gy + r * cs, gw, cs);
+      for (const c of G.glow.cols) ctx.fillRect(gx + c * cs, gy, cs, gw);
+    }
+  }
+  if (G.tut && G.tut.target >= 0) {
+    const i = G.tut.target, pulse = 0.5 + 0.5 * Math.sin(t / 220), wrong = G.tut.wrongT && t - G.tut.wrongT < 400 ? Math.sin((t - G.tut.wrongT) / 25) * 3 : 0;
+    ctx.fillStyle = `rgba(244,185,66,${0.25 + 0.3 * pulse})`; ctx.fillRect(gx + (i % n) * cs + 2, gy + Math.floor(i / n) * cs + 2, cs - 4, cs - 4);
+    ctx.strokeStyle = CORAL; ctx.lineWidth = 3; ctx.strokeRect(gx + (i % n) * cs + 3 + wrong, gy + Math.floor(i / n) * cs + 3, cs - 6, cs - 6);
+  }
+  // counts
+  const rc = new Array(n).fill(0), cc = new Array(n).fill(0);
+  for (let i = 0; i < n * n; i++) if (state[i] === 1) { rc[Math.floor(i / n)]++; cc[i % n]++; }
+  const fs = Math.round(cs * 0.42), full = rules && rules.full;
+  for (let k = 0; k < n; k++) { drawCount(gx - cs * 0.5, gy + k * cs + cs / 2, pz.rows[k], rc[k], rc[k] > pz.rows[k] || (full && rc[k] !== pz.rows[k]), fs); drawCount(gx + k * cs + cs / 2, gy - cs * 0.5, pz.cols[k], cc[k], cc[k] > pz.cols[k] || (full && cc[k] !== pz.cols[k]), fs); }
+  // nests, with a sun dot once they have their one owl
+  const owlsNear = new Uint8Array(n * n);
+  for (let i = 0; i < n * n; i++) if (state[i] === 1 && pz.cand[i]) owlsNear[pz.treeOf[i]]++;
+  if (!G.guarded) G.guarded = new Map();
+  for (const tr of pz.trees) { const gd = owlsNear[tr] === 1; if (gd && !G.guarded.has(tr)) { G.guarded.set(tr, t); if (!G.solved) sfx.owlet(); } else if (!gd) G.guarded.delete(tr); }
+  for (const tr of pz.trees) { ctx.save(); ctx.translate(gx + (tr % n) * cs + cs / 2, gy + Math.floor(tr / n) * cs + cs / 2); const pt = G.guarded.has(tr) ? (t - G.guarded.get(tr)) / 1300 : 1; drawNest(ctx, cs, owlsNear[tr] === 1, pt < 1 ? Math.sin(Math.min(1, pt * 1.6) * Math.PI) : 0); if (rules && rules.badNests.has(tr)) badRing(cs, t); ctx.restore(); }
+  // marks
+  const blink = Math.floor(t / 3400) % 1 === 0 && (t % 3400) < 130;
+  for (let i = 0; i < n * n; i++) {
+    if (!state[i] || state[i] === 4) continue;
+    const a0 = G.anim.get(i), k = a0 ? ease((t - a0) / 240) : 1, sc = 1 + (1 - k) * 0.35;
+    ctx.save(); ctx.translate(gx + (i % n) * cs + cs / 2, gy + Math.floor(i / n) * cs + cs / 2);
+    if (state[i] === 1) {
+      const wob = G.solved ? Math.sin((t - G.winT) / 180 + i) * 0.12 : 0;
+      ctx.rotate(wob); ctx.scale(sc, sc); drawOwl(ctx, cs, inkNow(), t / 1000 + i, blink && (i * 7) % 3 === 0);
+      if (rules && rules.badOwls.has(i) && !(a0 && t - a0 < BAD_DELAY)) badRing(cs, t, true);
+    } else { ctx.scale(sc, sc); drawTuft(ctx, cs, 0.9); }
+    ctx.restore();
+  }
+  // hint ring
+  if (G.hintCell >= 0) {
+    const age = (t - G.hintT) / 1000; if (age > 3) G.hintCell = -1; else {
+      ctx.strokeStyle = SUN; ctx.lineWidth = 3; ctx.setLineDash([6, 5]); ctx.lineDashOffset = -t / 40;
+      ctx.strokeRect(gx + (G.hintCell % n) * cs + 3, gy + Math.floor(G.hintCell / n) * cs + 3, cs - 6, cs - 6); ctx.setLineDash([]);
+    }
+  }
+  syncFlies(t); drawFlies(gx, gy, t);
+  grain(ctx, W, H, 0.09);
+}
+
+/* ---------- menu scene ---------- */
+const mcv = $('#menuCv'), mctx = mcv.getContext('2d');
+let mGrain = null;
+function menuResize() { const d = Math.min(2, window.devicePixelRatio || 1); mcv.width = innerWidth * d; mcv.height = innerHeight * d; mctx.setTransform(d, 0, 0, d, 0, 0); mGrain = null; }
+function drawMenu(t) {
+  const w = innerWidth, h = innerHeight;
+  drawSky(mctx, w, h, t, SKIES[1]);
+  { const R0 = Math.min(w, h) * 0.13, g = mctx.createRadialGradient(w * 0.78, h * 0.13, R0 * 0.9, w * 0.78, h * 0.13, R0 * 2); g.addColorStop(0, 'rgba(244,185,66,0.28)'); g.addColorStop(1, 'rgba(244,185,66,0)'); mctx.fillStyle = g; mctx.fillRect(0, 0, w, h * 0.5); }
+  // big moon, printed in sun ink
+  mctx.fillStyle = SUN; mctx.beginPath(); mctx.arc(w * 0.78, h * 0.13, Math.min(w, h) * 0.13, 0, 7); mctx.fill();
+  mctx.fillStyle = 'rgba(185,129,26,0.5)'; for (const [dx, dy, k] of [[-0.3, -0.2, 0.22], [0.25, 0.3, 0.16], [0.35, -0.35, 0.1]]) { const R0 = Math.min(w, h) * 0.13; mctx.beginPath(); mctx.arc(w * 0.78 + dx * R0, h * 0.13 + dy * R0, k * R0, 0, 7); mctx.fill(); }
+  // a wide branch across the middle, with the owl family on it
+  const by0 = h * 0.42, s = Math.min(w, h) * 0.17;
+  mctx.lineCap = 'round';
+  mctx.strokeStyle = INK; mctx.lineWidth = s * 0.26; mctx.beginPath(); mctx.moveTo(-10, by0 + s * 0.12); mctx.quadraticCurveTo(w * 0.5, by0 - s * 0.23, w + 10, by0 + s * 0.07); mctx.stroke();
+  mctx.strokeStyle = BARK; mctx.lineWidth = s * 0.2; mctx.beginPath(); mctx.moveTo(-10, by0 + s * 0.1); mctx.quadraticCurveTo(w * 0.5, by0 - s * 0.25, w + 10, by0 + s * 0.05); mctx.stroke();
+  const owls = [[0.2, 0.85, 'tawny'], [0.5, 1.25, save.skin], [0.8, 0.9, 'snowy']];
+  for (const [fx, k, id] of owls) {
+    const bob = Math.sin(t / 900 + fx * 9) * 2;
+    mctx.save(); mctx.translate(w * fx, by0 - s * 0.55 * k + bob - s * 0.16 + (fx - 0.5) * (fx - 0.5) * s * 0.6); drawOwl(mctx, s * k, INKS[id] || INKS.coral, t / 1000 + fx, (t % 4100) < 140 && fx > 0.3);
+    mctx.restore();
+  }
+  // nests at the foot
+  for (const [fx, k] of [[0.12, 0.8], [0.88, 0.75], [0.36, 0.6], [0.64, 0.62]]) { mctx.save(); mctx.translate(w * fx, by0 + s * 0.75 * k + s * 0.2); drawNest(mctx, s * k, fx < 0.5); mctx.restore(); }
+  if (!mGrain) mGrain = mctx.createPattern(grainCv, 'repeat');
+  mctx.save(); mctx.globalAlpha = 0.09; mctx.fillStyle = mGrain; mctx.fillRect(0, 0, w, h); mctx.restore();
+}
+
+/* ---------- win scene ---------- */
+const wcv = $('#winCv'), wctx = wcv.getContext('2d');
+let WS = null;   // { t0, pose, confetti }
+const CONF = [CORAL, SUN, MOSS, PAPER_L, INK];
+function winResize() { const d = Math.min(2, window.devicePixelRatio || 1); wcv.width = innerWidth * d; wcv.height = innerHeight * d; wctx.setTransform(d, 0, 0, d, 0, 0); }
+function startWinScene(pose) {
+  winResize();
+  WS = { t0: performance.now(), last: performance.now(), pose, confetti: Array.from({ length: 90 }, () => ({ x: Math.random(), y: -Math.random() * 1.2, vy: 0.12 + Math.random() * 0.14, vx: (Math.random() - 0.5) * 0.08, rot: Math.random() * 6, vr: (Math.random() - 0.5) * 6, w: 6 + Math.random() * 8, h: 4 + Math.random() * 6, c: CONF[Math.floor(Math.random() * CONF.length)] })) };
+}
+function drawWin(t) {
+  if (!WS) return;
+  const w = innerWidth, h = innerHeight, dt = Math.min(0.05, (t - WS.last) / 1000); WS.last = t;
+  const age = (t - WS.t0) / 1000, cx = w / 2, cy = h * 0.47;
+  wctx.clearRect(0, 0, w, h);
+  // slow sunburst in sun ink
+  wctx.save(); wctx.translate(cx, cy); wctx.rotate(age * 0.15);
+  const R = Math.hypot(w, h);
+  for (let k = 0; k < 14; k++) { wctx.fillStyle = k % 2 ? 'rgba(244,185,66,0.13)' : 'rgba(255,106,77,0.07)'; wctx.beginPath(); wctx.moveTo(0, 0); wctx.arc(0, 0, R, k * Math.PI / 7, (k + 0.5) * Math.PI / 7); wctx.closePath(); wctx.fill(); }
+  wctx.restore();
+  // the mascot pops in
+  const sc = age < 0.5 ? 1 + Math.sin(ease(age / 0.5) * Math.PI) * 0.25 : 1, k0 = Math.min(1, age / 0.35);
+  wctx.save(); wctx.translate(cx, cy); wctx.scale(sc * k0, sc * k0); drawMascot(wctx, Math.min(w, h) * 0.5, inkNow(), WS.pose, age); wctx.restore();
+  // paper confetti
+  for (const c of WS.confetti) {
+    c.y += c.vy * dt; c.x += c.vx * dt + Math.sin(age * 3 + c.rot) * 0.03 * dt; c.rot += c.vr * dt;
+    if (c.y > 1.1) { c.y = -0.1; c.x = Math.random(); }
+    wctx.save(); wctx.translate(c.x * w, c.y * h); wctx.rotate(c.rot); wctx.fillStyle = c.c; wctx.fillRect(-c.w / 2, -c.h / 2, c.w, c.h * Math.abs(Math.cos(c.rot * 1.3)) + 1); wctx.restore();
+  }
+  wctx.save(); wctx.globalAlpha = 0.12; if (!mGrain) mGrain = wctx.createPattern(grainCv, 'repeat'); wctx.fillStyle = wctx.createPattern(grainCv, 'repeat'); wctx.fillRect(0, 0, w, h); wctx.restore();
+}
+
+/* ---------- screens ---------- */
+function hideAll() { for (const id of ['levels', 'pause', 'win', 'needHint', 'roost', 'shop', 'how', 'ad', 'tut']) $('#' + id).hidden = true; WS = null; }
+function showMenu() { hideAll(); G = null; renderMenu(); $('#menu').hidden = false; }
+function renderMenu() {
+  const n = nextLevel(), all = Object.keys(save.stars).length >= LEVELS.length;
+  $('#playSub').textContent = all ? 'Wood cleared · replay any level' : `Level ${n + 1} · ${woodOf(n)[0]}`;
+  const done = save.daily.last === todayKey(), st = streakNow();
+  $('#dailyBtn').classList.toggle('done', done);
+  $('#dailySub').textContent = done ? 'Roosted tonight. New tree at midnight.' : 'A fresh tree every night';
+  $('#dailyStreak').textContent = done ? `Streak ${st} ✓` : `Streak ${st}`;
+  $('#menuStars').textContent = totalStars();
+  $('#sndBtn').textContent = save.sound ? 'Sound on' : 'Sound off';
+  $('#musBtn').textContent = save.music ? 'Music on' : 'Music off';
+}
+$('#playBtn').onclick = () => { audio(); if (!save.tutDone) startLevel(0, false, true); else startLevel(nextLevel()); };
+$('#howPlay').onclick = () => { audio(); $('#how').hidden = true; startLevel(0, false, true); };
+$('#dailyBtn').onclick = () => { audio(); startLevel(dailyIndex(), true); };
+$('#levelsBtn').onclick = () => { renderLevels(); $('#levels').hidden = false; };
+$('#levelsClose').onclick = () => { $('#levels').hidden = true; };
+function renderLevels() {
+  const nx = nextLevel(); $('#lvStars').textContent = totalStars();
+  $('#tiers').innerHTML = WOODS.map(([name, sub, start], ti) => `<div><div class="label">${name} · ${sub}</div><div class="grid">${LEVELS.slice(start, woodEnd(ti)).map((_, k) => {
+    const i = start + k, s = save.stars[i] || 0, open = unlocked(i);
+    return `<button data-l="${i}" class="${!open ? 'locked' : i === nx && !s ? 'next' : ''}" ${open ? '' : 'disabled'} aria-label="Level ${i + 1}">${open ? i + 1 : '🔒'}<small>${open ? '★'.repeat(s) + '<span style="opacity:.3">' + '★'.repeat(3 - s) + '</span>' : ''}</small></button>`;
+  }).join('')}</div></div>`).join('');
+}
+$('#tiers').addEventListener('click', e => { const b = e.target.closest('button[data-l]'); if (!b) return; audio(); startLevel(+b.dataset.l); });
+$('#sndBtn').onclick = () => { save.sound = !save.sound; persist(); renderMenu(); };
+$('#musBtn').onclick = () => { save.music = !save.music; persist(); renderMenu(); if (save.music) music.start(); else if (AC) musicBus.gain.setTargetAtTime(0, AC.currentTime, 0.1); };
+$('#howBtn').onclick = () => { drawHow(); $('#how').hidden = false; };
+$('#howClose').onclick = () => { $('#how').hidden = true; };
+$('#pauseBtn').onclick = () => { if (G && !G.solved) { renderPause(); $('#pause').hidden = false; } };
+function renderPause() { $('#autoTuftBtn').innerHTML = `Auto-mark around owls <b>${save.autoTuft ? 'On' : 'Off'}</b>`; }
+$('#autoTuftBtn').onclick = () => { save.autoTuft = !save.autoTuft; persist(); renderPause(); };
+$('#pGo').onclick = () => { $('#pause').hidden = true; };
+$('#pRetry').onclick = () => { $('#pause').hidden = true; clearBoard(); };
+$('#pQuit').onclick = () => showMenu();
+$('#undoBtn').onclick = undo;
+$('#hintBtn').onclick = useHint;
+$('#hClose').onclick = () => { $('#needHint').hidden = true; };
+$('#hShop').onclick = () => { $('#needHint').hidden = true; renderShop(); $('#shop').hidden = false; };
+$('#hAd').onclick = async () => {
+  const ok = await money.rewarded('Watch for a hint');
+  if (ok) { $('#needHint').hidden = true; giveHint(); updateHud(); } else $('#hNote').textContent = 'No hint this time. The ad needs to finish.';
+};
+// the how-to picture: a 3x3 corner of a board with one owl beside its nest
+function drawHow() {
+  const c = $('#howCv'), d = 2, w = c.clientWidth || 320, h = 150; c.width = w * d; c.height = h * d; const x = c.getContext('2d'); x.scale(d, d);
+  x.fillStyle = NIGHT; x.fillRect(0, 0, w, h);
+  const s = 40, ox = w / 2 - s * 1.5, oy = 22;
+  x.fillStyle = NIGHT_B; x.fillRect(ox, oy, s * 3, s * 3); x.strokeStyle = 'rgba(246,238,219,0.15)'; x.lineWidth = 1;
+  for (let k = 0; k <= 3; k++) { x.beginPath(); x.moveTo(ox + k * s, oy); x.lineTo(ox + k * s, oy + s * 3); x.stroke(); x.beginPath(); x.moveTo(ox, oy + k * s); x.lineTo(ox + s * 3, oy + k * s); x.stroke(); }
+  x.strokeStyle = INK; x.lineWidth = 2; x.strokeRect(ox, oy, s * 3, s * 3);
+  x.save(); x.translate(ox + s * 1.5, oy + s * 1.5); drawNest(x, s, true); x.restore();
+  x.save(); x.translate(ox + s * 0.5, oy + s * 1.5); drawOwl(x, s, inkNow()); x.restore();
+  for (const [cx, cy] of [[1.5, 0.5], [2.5, 0.5], [1.5, 2.5], [0.5, 2.5], [2.5, 2.5], [0.5, 0.5], [2.5, 1.5]]) { x.save(); x.translate(ox + s * cx, oy + s * cy); drawTuft(x, s, 0.5); x.restore(); }
+  x.font = '15px "Rammetto One", sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = PAPER_L;
+  for (let k = 0; k < 3; k++) { x.fillText(k === 1 ? '1' : '0', ox - 16, oy + k * s + s / 2); x.fillText(k === 0 ? '1' : '0', ox + k * s + s / 2, oy - 12); }
+}
+
+// roost (owl skins)
+function skinPreview(id) {
+  const c = document.createElement('canvas'), d = 2; c.width = c.height = 48 * d; const x = c.getContext('2d'); x.scale(d, d); x.translate(24, 26);
+  drawOwl(x, 50, INKS[id]); return c;
+}
+function renderRoost(msg) {
+  $('#rStars').textContent = totalStars();
+  const box = $('#skins'); box.innerHTML = '';
+  for (const s of SKINS) {
+    const own = skinOwned(s), row = document.createElement('div'); row.className = 'item' + (save.skin === s.id ? ' on' : '');
+    row.appendChild(skinPreview(s.id));
+    row.insertAdjacentHTML('beforeend', `<div class="txt"><b>${s.name}</b><span>${own ? (s.id === 'coral' ? s.desc : 'Ready to roost.') : s.desc}</span></div>` +
+      (save.skin === s.id ? '<button class="buy" disabled>Roosting</button>' : own ? `<button class="buy" data-skin="${s.id}">Pick</button>` : s.pack ? `<button class="buy" data-buy="feather_pack">${money.price(findProduct('feather_pack'))}</button>` : `<button class="buy" disabled>${s.stars} ★</button>`));
+    box.appendChild(row);
+  }
+  $('#rMsg').textContent = msg || '';
+}
+$('#roostBtn').onclick = () => { renderRoost(); $('#roost').hidden = false; };
+$('#rClose').onclick = () => { $('#roost').hidden = true; };
+$('#skins').addEventListener('click', async e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.skin) { if (!save.skins.includes(b.dataset.skin)) save.skins.push(b.dataset.skin); save.skin = b.dataset.skin; persist(); sfx.perch(); renderRoost(); }
+  else if (b.dataset.buy) { b.disabled = true; const msg = await money.buy(findProduct(b.dataset.buy)); renderRoost(msg || undefined); }
+});
+
+/* ---------- money: rewarded ads, light interstitials, in-app purchases ----------
+   In the Android app this talks to AdMob and Google Play Billing. Everywhere else it runs in test mode:
+   ads are a short stand-in card and purchases are free test purchases, so every flow can be tried.
+   Before launch, swap the Google test ad unit ids below for real ones from AdMob. */
+const AD_UNITS = { rewarded: 'ca-app-pub-3940256099942544/5224354917', interstitial: 'ca-app-pub-3940256099942544/1033173712' };
+const AD_TESTING = true;   // set false for the release build once real ad unit ids are in
+// Product ids must match the in-app products created in Play Console. Prices here are fallbacks;
+// the app shows Google Play's local price once the store has loaded.
+const PRODUCTS = [
+  { id: 'remove_ads', name: 'Remove ads', once: true, noAds: true, price: '£2.99', desc: 'No more ads between levels, ever. Hint ads stay optional.' },
+  { id: 'hints_10', name: '10 hints', hints: 10, price: '£0.99', desc: 'Each hint settles one branch and tells you why.' },
+  { id: 'hints_40', name: '40 hints', hints: 40, price: '£2.99', desc: 'Plenty for the Old Oak.', tag: 'Best value' },
+  { id: 'feather_pack', name: 'Feather pack', once: true, skins: ['moonlit', 'ember'], price: '£1.99', desc: 'The Moonlit Owl and the Ember Owl.' },
+];
+const findProduct = id => PRODUCTS.find(p => p.id === id);
+const INTERSTITIAL = { everyLevels: 3, minGap: 90, fromLevel: 16 };
+const money = {
+  native: !!(window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()),
+  granted: save.tx || [],   // transaction ids already paid out, so nothing is granted twice
+  lastInterstitial: 0, busy: false, adMob: null, billing: null,
+  async init() {
+    if (!this.native) return;
+    try {
+      this.adMob = Capacitor.Plugins.AdMob;
+      await this.adMob.initialize({ initializeForTesting: AD_TESTING });
+      // ask for ad consent where the law requires it (UK and EU)
+      try { const ci = await this.adMob.requestConsentInfo(); if (ci.isConsentFormAvailable && ci.status === 'REQUIRED') await this.adMob.showConsentForm(); } catch (e) {}
+      this.prepRewarded(); if (!save.noAds) this.prepInterstitial();
+    } catch (e) { this.adMob = null; }
+    try { await this.initBilling(); } catch (e) { this.billing = null; }
+  },
+  prepRewarded() { this.adMob && this.adMob.prepareRewardVideoAd({ adId: AD_UNITS.rewarded, isTesting: AD_TESTING }).catch(() => {}); },
+  prepInterstitial() { this.adMob && this.adMob.prepareInterstitial({ adId: AD_UNITS.interstitial, isTesting: AD_TESTING }).catch(() => {}); },
+  // the plugin only resolves showRewardVideoAd when the reward is earned, so listen for the close as well
+  nativeRewarded() {
+    return new Promise(async res => {
+      let earned = false, settled = false; const subs = [];
+      const done = v => { if (settled) return; settled = true; subs.forEach(h => h && h.remove && h.remove()); res(v); };
+      try {
+        subs.push(await this.adMob.addListener('onRewardedVideoAdReward', () => { earned = true; }));
+        subs.push(await this.adMob.addListener('onRewardedVideoAdDismissed', () => done(earned)));
+        subs.push(await this.adMob.addListener('onRewardedVideoAdFailedToShow', () => done(false)));
+        this.adMob.showRewardVideoAd().catch(() => done(false));
+      } catch (e) { done(false); }
+    });
+  },
+  nativeInterstitial() {
+    return new Promise(async res => {
+      let settled = false; const subs = [];
+      const done = () => { if (settled) return; settled = true; subs.forEach(h => h && h.remove && h.remove()); res(); };
+      try {
+        subs.push(await this.adMob.addListener('interstitialAdDismissed', done));
+        subs.push(await this.adMob.addListener('interstitialAdFailedToShow', done));
+        this.adMob.showInterstitial().catch(done);
+      } catch (e) { done(); }
+    });
+  },
+  // resolves true only if the player watched to the end and earned the reward
+  async rewarded(title) {
+    if (this.busy) return false; this.busy = true; let ok = false;
+    try {
+      if (this.native && this.adMob) { ok = await this.nativeRewarded(); this.prepRewarded(); }
+      else if (this.native) ok = false;
+      else ok = await testAd('rewarded', title);
+    } catch (e) { ok = false; this.prepRewarded(); }
+    this.busy = false; return ok;
+  },
+  // between levels only, now and then, never for anyone who bought Remove ads
+  async interstitial(levelIdx) {
+    if (save.noAds || levelIdx < INTERSTITIAL.fromLevel - 1) return;
+    save.sinceAd++; persist();
+    const now = Date.now() / 1000;
+    if (save.sinceAd < INTERSTITIAL.everyLevels || now - this.lastInterstitial < INTERSTITIAL.minGap) return;
+    save.sinceAd = 0; persist(); this.lastInterstitial = now;
+    if (this.native) { if (this.adMob) { await this.nativeInterstitial(); this.prepInterstitial(); } }
+    else await testAd('inter', 'Thanks for playing Nest Rows');
+  },
+  async initBilling() {
+    // cordova plugin scripts load after the page, so wait for deviceready before looking for the store
+    if (!window.CdvPurchase) await new Promise(r => { document.addEventListener('deviceready', r, { once: true }); setTimeout(r, 8000); });
+    if (!window.CdvPurchase) return;
+    const { store: st, ProductType, Platform } = CdvPurchase;
+    st.register(PRODUCTS.map(p => ({ id: p.id, type: p.once ? ProductType.NON_CONSUMABLE : ProductType.CONSUMABLE, platform: Platform.GOOGLE_PLAY })));
+    st.when()
+      .approved(tx => { tx.products.forEach(pr => grant(pr.id, tx.transactionId)); tx.finish(); })
+      .productUpdated(() => { if (!$('#shop').hidden) renderShop(); });
+    await st.initialize([Platform.GOOGLE_PLAY]);
+    this.billing = st; $('#restoreBtn').hidden = false;
+    // re-grant one-time purchases already owned (new phone, reinstall)
+    for (const p of PRODUCTS) if (p.once && st.owned(p.id)) grant(p.id, 'owned-' + p.id);
+  },
+  price(p) { const pr = this.billing && this.billing.get(p.id); return (pr && pr.pricing && pr.pricing.price) || p.price; },
+  ownsProduct(p) { return p.once && this.granted.some(t => t.endsWith(':' + p.id)); },
+  async buy(p) {
+    if (this.native) {
+      if (!this.billing) return 'The store is not available right now. Check your connection and try again.';
+      const pr = this.billing.get(p.id), offer = pr && pr.getOffer();
+      if (!offer) return 'That item is not available yet.';
+      const err = await offer.order();
+      return err && err.code !== CdvPurchase.ErrorCode.PAYMENT_CANCELLED ? 'The purchase did not go through.' : '';
+    }
+    grant(p.id, 'test-' + Date.now());   // web test version: granted straight away, nothing is charged
+    return 'Test purchase: nothing was charged. The app store version opens Google Play here.';
+  },
+  async restore() { if (this.billing) { await this.billing.restorePurchases(); for (const p of PRODUCTS) if (p.once && this.billing.owned(p.id)) grant(p.id, 'owned-' + p.id); } },
+};
+function grant(id, txId) {
+  const p = findProduct(id); if (!p) return;
+  const key = (txId || 'tx') + ':' + id;
+  if (money.granted.includes(key) || (p.once && money.ownsProduct(p))) return;
+  money.granted.push(key); save.tx = money.granted;
+  if (p.hints) save.hints += p.hints;
+  if (p.noAds) save.noAds = true;
+  if (p.skins) for (const s of p.skins) if (!save.skins.includes(s)) save.skins.push(s);
+  persist(); sfx.chime();
+  const msg = `Thank you! ${p.hints ? p.hints + ' hints added.' : p.skins ? 'Two new owls are in your roost.' : 'No more ads between levels.'}`;
+  if (!$('#shop').hidden) renderShop(msg);
+  if (!$('#roost').hidden) renderRoost(msg);
+  if (G) updateHud();
+  if (!$('#menu').hidden) renderMenu();
+}
+function renderShop(msg) {
+  $('#sHints').textContent = save.hints;
+  $('#extras').innerHTML = PRODUCTS.map(p => {
+    const owned = money.ownsProduct(p) || (p.noAds && save.noAds) || (p.skins && p.skins.every(s => save.skins.includes(s)));
+    return `<div class="item"><div class="txt"><b>${p.name}${p.tag ? `<span class="badge">${p.tag}</span>` : ''}</b><span>${p.desc}</span></div>${owned ? '<button class="buy" disabled>Owned</button>' : `<button class="buy" data-buy="${p.id}">${money.price(p)}</button>`}</div>`;
+  }).join('') + `<div class="item"><div class="txt"><b>Hint by ad</b><span>Watch a short ad for one hint.</span></div><button class="buy ad" id="shopAd">Watch</button></div>`;
+  $('#shopMsg').textContent = msg || (money.native ? '' : 'Test shop: purchases here are free and only for trying things out.');
+}
+$('#shopBtn').onclick = () => { renderShop(); $('#shop').hidden = false; };
+$('#shopClose').onclick = () => { $('#shop').hidden = true; if (G) updateHud(); else renderMenu(); };
+$('#restoreBtn').onclick = async () => { await money.restore(); renderShop('Purchases restored.'); };
+$('#extras').addEventListener('click', async e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.id === 'shopAd') { const ok = await money.rewarded('Watch for a hint'); if (ok) { save.hints++; persist(); } renderShop(ok ? 'One hint added.' : 'No hint this time. The ad needs to finish.'); return; }
+  if (!b.dataset.buy) return; b.disabled = true;
+  const msg = await money.buy(findProduct(b.dataset.buy)); renderShop(msg || undefined);
+});
+
+// web stand-in for a video ad: a short bar the player can bail out of
+let adTimer = 0;
+function testAd(kind, title) {
+  return new Promise(res => {
+    $('#adTitle').textContent = title; $('#ad').hidden = false; const fill = $('#adFill'), skip = $('#adSkip');
+    skip.textContent = kind === 'rewarded' ? 'Close without reward' : 'Skip ad'; skip.hidden = kind !== 'rewarded';
+    const t0 = performance.now(), dur = kind === 'rewarded' ? 3200 : 2600; clearInterval(adTimer);
+    const done = ok => { clearInterval(adTimer); $('#ad').hidden = true; res(ok); };
+    skip.onclick = () => done(kind !== 'rewarded');
+    adTimer = setInterval(() => {
+      const k = Math.min(1, (performance.now() - t0) / dur); fill.style.width = (k * 100) + '%';
+      if (kind !== 'rewarded' && k > 0.6) skip.hidden = false;
+      if (k >= 1) done(true);
+    }, 50);
+  });
+}
+
+/* ---------- boot ---------- */
+window.addEventListener('resize', () => { resize(); menuResize(); if (!$('#win').hidden) winResize(); });
+resize(); menuResize(); renderMenu(); money.init();
+requestAnimationFrame(frame);
+
+// test hooks for automated play-throughs
+window.__nr = { get G() { return G; }, LEVELS, DAILY, TUT_STEPS, save, startLevel, setCell, showMenu, parse, deduce, check, get geo() { return { cs, bx, by }; }, nextMark };
+})();
+</script>
+
+<script>if ('serviceWorker' in navigator && !window.Capacitor) addEventListener('load', () => navigator.serviceWorker.register('sw.js'));</script>
+</body>
+</html>

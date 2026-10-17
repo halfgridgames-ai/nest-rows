@@ -1,0 +1,19 @@
+{
+  "appId": "com.halfgridgames.nestrows",
+  "appName": "Nest Rows",
+  "webDir": "www",
+  "backgroundColor": "#151838",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "backgroundColor": "#151838"
+  },
+  "plugins": {
+    "SystemBars": {
+      "hidden": true,
+      "style": "DARK",
+      "initialViewportFitValueHint": "cover"
+    }
+  }
+}
