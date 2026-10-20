@@ -881,6 +881,7 @@ function startLevel(idx, daily = false, tut = false) {
   skyFill(); layout(); updateHud(); flash('');
   $('#hudLvl').innerHTML = tut ? 'Tutorial<small>Saplings</small>' : daily ? `Daily Roost<small>${new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' })}</small>` : `Level ${idx + 1}<small>${woodOf(idx)[0]} · ${n}×${n}</small>`;
   $('#hintBtn').disabled = tut;
+  track(tut ? 'tutorial_begin' : 'level_start', { level_name: levelName(G), level: tut || daily ? 0 : idx + 1, size: n });
   if (tut) tutEnter(0);
   else if (!daily && idx < SAPLING_TIPS.length && !save.stars[idx]) flash(SAPLING_TIPS[idx], 5000);
   else if (!daily && idx < 8 && !save.stars[idx]) flash('Tip: tap once for an owl, twice for a tuft, three times to clear.', 5000);
@@ -1053,6 +1054,7 @@ function win() {
     save.best[G.idx] = Math.min(save.best[G.idx] || 1e9, Math.round(G.time));
   }
   persist();
+  track(G.tut ? 'tutorial_complete' : 'level_end', { level_name: levelName(G), success: true, stars, seconds: Math.round(G.time), hints: G.hints, mistakes: G.mistakes });
   const g = G; winTimer = setTimeout(() => { if (G === g) showWin(stars); }, 1900);
 }
 function showWin(stars) {
@@ -1427,6 +1429,17 @@ $('#skins').addEventListener('click', async e => {
   else if (b.dataset.buy) { b.disabled = true; const msg = await money.buy(findProduct(b.dataset.buy)); renderRoost(msg || undefined); }
 });
 
+/* ---------- analytics ----------
+   In the Android app this logs events to Firebase Analytics, which also collects installs, sessions and
+   retention on its own. Everywhere else, and in builds without google-services.json, it does nothing. */
+function track(name, params) {
+  try {
+    const fa = window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform() && Capacitor.Plugins.FirebaseAnalytics;
+    if (fa) fa.logEvent({ name, params: params || {} }).catch(() => {});
+  } catch (e) {}
+}
+function levelName(g) { return g.tut ? 'tutorial' : g.daily ? 'daily' : 'level_' + (g.idx + 1); }
+
 /* ---------- money: rewarded ads, light interstitials, in-app purchases ----------
    In the Android app this talks to AdMob and Google Play Billing. Everywhere else it runs in test mode:
    ads are a short stand-in card and purchases are free test purchases, so every flow can be tried.
@@ -1492,6 +1505,7 @@ const money = {
       else if (this.native) ok = false;
       else ok = await testAd('rewarded', title);
     } catch (e) { ok = false; this.prepRewarded(); }
+    if (ok) track('rewarded_ad_watched', { placement: title });
     this.busy = false; return ok;
   },
   // between levels only, now and then, never for anyone who bought Remove ads
