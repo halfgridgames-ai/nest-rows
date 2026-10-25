@@ -151,6 +151,17 @@ button:focus-visible { outline: 3px solid var(--coral); outline-offset: 2px; }
 .toast { position: fixed; left: 50%; top: calc(70px + env(safe-area-inset-top, 0px)); transform: translateX(-50%); z-index: 20; background: var(--ink); color: var(--paper-light); padding: 9px 16px; border-radius: 6px; box-shadow: 3px 3px 0 var(--coral); max-width: calc(100% - 32px); text-align: center; }
 .tog.set { display: flex; justify-content: space-between; width: 100%; background: var(--paper); border: 2px solid var(--paper-deep); border-radius: 8px; padding: 10px 12px; font-size: 15px; color: var(--ink); }
 .tog.set b { color: var(--moss-deep); }
+.setlist { display: flex; flex-direction: column; gap: 8px; }
+.setlist .tog.set { justify-content: flex-start; gap: 12px; text-align: left; }
+.setlist .tog.set .ic { width: 22px; text-align: center; flex: none; }
+.setlist .tog.set.rate { background: var(--sun); border-color: var(--ink); box-shadow: 3px 3px 0 var(--ink); }
+.setfoot { font-size: 12px; color: var(--ink-dim); text-align: center; font-weight: 700; }
+.rateask { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; width: 100%; padding: 10px 12px; border-radius: 8px; background: rgba(13,15,43,0.72); border: 2px solid var(--sun); color: var(--paper-light); font-weight: 800; font-size: 15px; animation: fadeUp .5s 1s both; }
+.rateask > span { flex: 1 1 100%; text-align: center; }
+.rateask .starI { color: var(--sun); letter-spacing: 2px; }
+.rateask button { border-radius: 999px; padding: 7px 16px; font-size: 14px; }
+.rateask #wRateYes { background: var(--sun); color: var(--ink); }
+.rateask #wRateNo { background: transparent; color: var(--paper-deep); }
 
 /* ---- simple layout (after Meowdoku): round buttons, rule chips, an owl tracker, and a day or night look ---- */
 :root { --bg: var(--night); --fg: var(--paper-light); --btn-bg: var(--ink-2); --btn-fg: var(--paper-light); --chip-bg: rgba(246,238,219,0.07); --chip-bd: rgba(246,238,219,0.14); }
@@ -320,6 +331,7 @@ HGSplash.show();
     <button class="tog" id="musBtn">Music on</button>
     <button class="tog" id="howBtn">How to play</button>
     <button class="tog" id="themeBtn">Day</button>
+    <button class="tog" id="setBtn">Settings</button>
   </div>
 </div>
 
@@ -340,6 +352,21 @@ HGSplash.show();
   </div>
 </div>
 
+<div class="overlay" id="settings" hidden>
+  <div class="card">
+    <h2>Settings</h2>
+    <div class="setlist">
+      <button class="tog set rate" id="sRate"><span class="ic" aria-hidden="true">★</span>Rate Nest Rows</button>
+      <button class="tog set" id="sAds" hidden><span class="ic" aria-hidden="true">🛡</span>Ad privacy choices</button>
+      <button class="tog set" id="sPrivacy"><span class="ic" aria-hidden="true">🔒</span>Privacy policy</button>
+      <button class="tog set" id="sTerms"><span class="ic" aria-hidden="true">📄</span>Terms of service</button>
+      <button class="tog set" id="sContact"><span class="ic" aria-hidden="true">✉</span>Contact us</button>
+    </div>
+    <div class="row"><button class="go" id="setClose">Done</button></div>
+    <p class="setfoot">Nest Rows · Half Grid Games</p>
+  </div>
+</div>
+
 <div class="overlay winscene" id="win" hidden>
   <canvas id="winCv"></canvas>
   <div class="winTop">
@@ -349,6 +376,7 @@ HGSplash.show();
   <div class="winBottom">
     <p class="praise" id="wNote" role="status"></p>
     <div class="factrow" id="wFacts"></div>
+    <div class="rateask" id="wRate" hidden><span>Enjoying Nest Rows? <span class="starI">★★★★★</span></span><button id="wRateYes">Rate it</button><button id="wRateNo">Not now</button></div>
     <button class="go big" id="wNext">Next</button>
     <button class="textbtn" id="wMenu">Back to the woods</button>
   </div>
@@ -1078,6 +1106,7 @@ function showWin(stars) {
   $('#wNote').textContent = note;
   $('#wNext').textContent = G.tut ? 'Level 1' : G.daily || G.idx === LEVELS.length - 1 ? 'Back to the woods' : `Level ${G.idx + 2}`;
   $('#wMenu').hidden = G.daily || G.tut || G.idx === LEVELS.length - 1;
+  $('#wRate').hidden = !rating.shouldAsk(stars);
   startWinScene(stars === 3 ? 'cheer' : stars === 2 ? 'cool' : 'sleepy');
   $('#win').hidden = false; sfx.chime();
 }
@@ -1331,7 +1360,7 @@ function drawWin(t) {
 }
 
 /* ---------- screens ---------- */
-function hideAll() { for (const id of ['levels', 'pause', 'win', 'needHint', 'roost', 'shop', 'how', 'ad', 'tut', 'streak']) $('#' + id).hidden = true; WS = null; }
+function hideAll() { for (const id of ['levels', 'pause', 'win', 'needHint', 'roost', 'shop', 'how', 'ad', 'tut', 'streak', 'settings']) $('#' + id).hidden = true; WS = null; }
 function showMenu() { hideAll(); G = null; renderMenu(); $('#menu').hidden = false; }
 function renderMenu() {
   const n = nextLevel(), all = Object.keys(save.stars).length >= LEVELS.length;
@@ -1377,6 +1406,39 @@ $('#themeBtn').onclick = () => setTheme(isDay() ? 'night' : 'day');
 $('#themeSet').onclick = () => setTheme(isDay() ? 'night' : 'day');
 setTheme(save.theme || 'night');
 if (document.fonts) document.fonts.ready.then(drawRuleIcons);
+// settings: rate, ad privacy, privacy policy, terms, contact. In the Android app Capacitor hands
+// outside URLs to the system, so the Play link opens the Play Store app and the pages open in the browser.
+const LINKS = {
+  play: 'https://play.google.com/store/apps/details?id=com.halfgridgames.nestrows',
+  privacy: 'https://halfgridgames-ai.github.io/nest-rows/privacy.html',
+  terms: 'https://halfgridgames-ai.github.io/nest-rows/terms.html',
+  contact: 'mailto:halfgridgames@gmail.com?subject=Nest%20Rows',
+};
+function openLink(url) { if (money.native) location.href = url; else window.open(url, '_blank', 'noopener'); }
+// a one-time, skippable "rate us" strip on the win screen: after a few solved levels, on a 3-star solve
+const rating = {
+  shouldAsk(stars) {
+    if (G.tut) return false;
+    save.solves = (save.solves || 0) + 1; persist();
+    if (save.rateAsked || save.solves < 5 || stars < 3) return false;
+    save.rateAsked = true; persist(); track('rate_prompt', {}); return true;
+  },
+  open() { save.rateAsked = true; persist(); track('rate_open', {}); openLink(LINKS.play); },
+};
+async function openSettings() {
+  $('#sAds').hidden = true; $('#settings').hidden = false;
+  // UK/EU players must be able to change their ad consent; AdMob says when that applies
+  if (money.adMob) try { const ci = await money.adMob.requestConsentInfo(); $('#sAds').hidden = ci.privacyOptionsRequirementStatus !== 'REQUIRED'; } catch (e) {}
+}
+$('#setBtn').onclick = () => openSettings();
+$('#setClose').onclick = () => { $('#settings').hidden = true; };
+$('#sRate').onclick = () => rating.open();
+$('#sPrivacy').onclick = () => openLink(LINKS.privacy);
+$('#sTerms').onclick = () => openLink(LINKS.terms);
+$('#sContact').onclick = () => openLink(LINKS.contact);
+$('#sAds').onclick = () => { if (money.adMob) money.adMob.showPrivacyOptionsForm().catch(() => {}); };
+$('#wRateYes').onclick = () => { $('#wRate').hidden = true; rating.open(); };
+$('#wRateNo').onclick = () => { $('#wRate').hidden = true; };
 $('#autoTuftBtn').onclick = () => { save.autoTuft = !save.autoTuft; persist(); renderPause(); };
 $('#pGo').onclick = () => { $('#pause').hidden = true; };
 $('#pRetry').onclick = () => { $('#pause').hidden = true; clearBoard(); };
