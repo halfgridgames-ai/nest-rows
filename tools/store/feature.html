@@ -1,0 +1,16 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rammetto+One&family=Baloo+2:wght@700;800&display=swap">
+<style>
+  html, body { margin: 0; }
+  .fg { width: 1024px; height: 500px; position: relative; overflow: hidden; background: radial-gradient(circle at 70% 40%, #262a66, #151838 70%); font-family: "Baloo 2", sans-serif; }
+  .stars { position: absolute; inset: 0; background-image: radial-gradient(#f6eedb 1.2px, transparent 1.6px), radial-gradient(#f6eedb 1px, transparent 1.4px); background-size: 97px 83px, 61px 71px; background-position: 13px 7px, 40px 30px; opacity: 0.35; }
+  .moon { position: absolute; right: 70px; top: 34px; width: 150px; height: 150px; border-radius: 50%; background: #f4b942; box-shadow: 0 0 80px 20px rgba(244,185,66,0.25); }
+  .moon i { position: absolute; border-radius: 50%; background: rgba(150,100,30,0.35); }
+  .owls { position: absolute; right: -40px; top: 150px; width: 650px; -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, transparent 100%); mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, transparent 100%); }
+  .logo { position: absolute; left: 64px; top: 70px; font: 120px/0.9 "Rammetto One", sans-serif; color: #f6eedb; text-shadow: 6px 6px 0 #ff6a4d; letter-spacing: -1px; }
+  .logo span { display: block; color: #ff6a4d; text-shadow: 6px 6px 0 #0d0f2b; }
+  .tag { position: absolute; left: 64px; top: 360px; background: #3c3e86; color: #f6eedb; padding: 10px 20px; border-radius: 6px; font-size: 27px; font-weight: 800; transform: rotate(-2deg); box-shadow: 4px 4px 0 #ff6a4d; }
+</style></head>
+<body><div class="fg"><div class="stars"></div><div class="moon"><i style="left:30px;top:40px;width:34px;height:34px"></i><i style="left:90px;top:30px;width:18px;height:18px"></i><i style="left:80px;top:85px;width:28px;height:28px"></i></div>
+<img class="owls" src="owls.png"><div class="logo">Nest<span>Rows</span></div><div class="tag">One owl per nest. No owls touching.</div></div></body></html>
