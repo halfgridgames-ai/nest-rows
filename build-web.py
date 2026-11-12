@@ -33,7 +33,7 @@ sw = (root / 'sw-template.js').read_text().replace('__VERSION__', ver)
 print('built web/ version', ver)
 
 # Store assets page (web/store.html) so the Play graphics can be saved from a phone.
-shutil.copytree(root / 'store', root / 'web' / 'store', dirs_exist_ok=True, ignore=shutil.ignore_patterns('*.md'))
+shutil.copytree(root / 'store', root / 'web' / 'store', dirs_exist_ok=True, ignore=shutil.ignore_patterns('*.md', 'raw'))
 shutil.copy(root / 'web' / 'icon-512.png', root / 'web' / 'store' / 'icon-512.png')
 items = [('App icon (512×512)', 'store/icon-512.png'), ('Feature graphic (1024×500)', 'store/feature-graphic-1024x500.png')]
 items += [(f'Phone screenshot {p.stem}', 'store/screenshots/' + p.name) for p in sorted((root / 'store' / 'screenshots').glob('*.png'))]
