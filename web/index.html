@@ -1558,9 +1558,9 @@ function levelName(g) { return g.tut ? 'tutorial' : g.daily ? 'daily' : 'level_'
    it runs in test mode: ads are a short stand-in card and purchases are free test purchases, so every flow can be tried.
    Before launch, swap the Google test ad unit ids below for real ones from AdMob (each platform has its own app). */
 const AD_UNITS = PLATFORM === 'ios'
-  ? { rewarded: 'ca-app-pub-3940256099942544/1712485313', interstitial: 'ca-app-pub-3940256099942544/4411468910' }
-  : { rewarded: 'ca-app-pub-3940256099942544/5224354917', interstitial: 'ca-app-pub-3940256099942544/1033173712' };
-const AD_TESTING = true;   // set false for the release build once real ad unit ids are in
+  ? { rewarded: 'ca-app-pub-4390358547833612/4238057973', interstitial: 'ca-app-pub-4390358547833612/1440504241' }
+  : { rewarded: 'ca-app-pub-4390358547833612/6166042301', interstitial: 'ca-app-pub-4390358547833612/1547994652' };
+const AD_TESTING = false;   // real AdMob units on Android and iPhone
 // Product ids must match the in-app products in Play Console and App Store Connect. Prices here are fallbacks;
 // the app shows the store's local price once it has loaded.
 // App Store product ids are unique across the whole developer account, so the iPhone ids carry an nr_ prefix.

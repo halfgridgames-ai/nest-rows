@@ -12,4 +12,4 @@ An owl-placement logic puzzle by Half Grid Games. Every nest hollow wants exactl
 - `store/`: Play Store listing text, the feature graphic and phone screenshots.
 - `tools/make-icon.py`: redraws the icon and feature graphic (then run `android-app/tools/make-icons.py` for the launcher icons).
 
-Hints are not free: each one costs a short rewarded ad, or comes from a bought hint pack. Ads use Google's test ids and purchases are free test purchases until the real ids are swapped in (see `android-app/README.md`, "Before launch"). In-app products: `remove_ads`, `hints_10`, `hints_40`, `feather_pack`.
+Hints are not free: each one costs a short rewarded ad, or comes from a bought hint pack. The apps use real AdMob units (Android and iPhone each have their own AdMob app); the web version shows stand-in ads and free test purchases. In-app products: `remove_ads`, `hints_10`, `hints_40`, `feather_pack`.
