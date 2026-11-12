@@ -7,6 +7,7 @@ An owl-placement logic puzzle by Half Grid Games. Every nest hollow wants exactl
 - `index.html`: the whole game, one file. Open it in a browser to play.
 - `build-web.py`: builds the installable web version into `web/` (GitHub Pages publishes it on every push to `main`).
 - `android-app/`: the Android app (Capacitor 8), built by GitHub Actions. See `android-app/README.md` for signing and release steps.
+- `android-app/ios/`: the iPhone app, built and uploaded to TestFlight on a cloud Mac. See `android-app/README-ios.md`.
 - `privacy.html`: the privacy policy, published at `/privacy.html` on the Pages site.
 - `store/`: Play Store listing text, the feature graphic and phone screenshots.
 - `tools/make-icon.py`: redraws the icon and feature graphic (then run `android-app/tools/make-icons.py` for the launcher icons).
