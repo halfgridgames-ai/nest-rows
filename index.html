@@ -1452,12 +1452,24 @@ const LINKS = {
   contact: 'mailto:halfgridgames@gmail.com?subject=Nest%20Rows',
 };
 function openLink(url) { if (money.native) location.href = url; else window.open(url, '_blank', 'noopener'); }
-// a one-time, skippable "rate us" strip on the win screen: after a few solved levels, on a 3-star solve
+// The store's own review pop-up (@capacitor-community/in-app-review), only in the phone apps. Asked after a good
+// moment, at most 3 times and at least a week apart; Apple and Google still decide whether it actually shows.
+const IAR = () => (PLATFORM !== 'web' && window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.InAppReview) || null;
+function nativeReview(st) {  // st holds {n, t}; returns false when there is no native pop-up, so the game shows its own strip
+  if (!IAR()) return false;
+  const now = Date.now();
+  if ((st.n || 0) < 3 && now - (st.t || 0) > 7 * 864e5) { st.n = (st.n || 0) + 1; st.t = now; setTimeout(() => IAR().requestReview().catch(() => {}), 1200); }
+  return true;
+}
+// otherwise a one-time, skippable "rate us" strip on the win screen: after a few solved levels, on a 3-star solve
 const rating = {
   shouldAsk(stars) {
     if (G.tut) return false;
     save.solves = (save.solves || 0) + 1; persist();
-    if (!LINKS.play || save.rateAsked || save.solves < 5 || stars < 3) return false;
+    if (save.solves < 5 || stars < 3) return false;
+    save.rateNative = save.rateNative || {};
+    if (nativeReview(save.rateNative)) { persist(); track('rate_native', { n: save.rateNative.n }); return false; }
+    if (!LINKS.play || save.rateAsked) return false;
     save.rateAsked = true; persist(); track('rate_prompt', {}); return true;
   },
   open() { save.rateAsked = true; persist(); track('rate_open', {}); openLink(LINKS.play); },
