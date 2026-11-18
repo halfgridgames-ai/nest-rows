@@ -1,0 +1,18 @@
+Screen recording: attached in the App Review Information attachment, recorded on a real device running the latest iOS, starting from launching the app.
+
+1. Purpose and audience
+Nest Rows is a calm logic puzzle game for all ages (4+). Each tree hollow needs exactly one owl on a branch beside it, owls may never touch (not even diagonally), and the numbers on the edges say how many owls sit in each row and column. It has 65 levels across 4 woods plus a new Daily Roost puzzle every day, and can be played offline in short sessions. It runs on iPhone and iPad.
+
+2. How to use the app
+No account, login or setup is needed. Open the app; a short tutorial teaches the rules. Then tap Play and tap branches to place owls. Undo, Hint, Restart, the Daily Roost, the Roost (owl collection), the Shop and Settings are all on screen. All features are available straight away. After a few wins the app may show Apple's standard rating prompt.
+
+3. External services
+- Apple In-App Purchase for the optional purchases (Remove Ads, 10 Hints, 40 Hints, Feather Pack). The Shop has a Restore purchases button.
+- Google AdMob for optional rewarded ads (for free hints) and occasional interstitial ads between levels, limited to PG-rated ads, with Google's consent message and Apple's App Tracking Transparency prompt.
+No login, AI service or other data provider is used.
+
+4. Regional differences
+None. The app works the same in every region where it is available.
+
+5. Regulated industry or third-party material
+The app is not in a regulated industry and contains no third-party protected material. All levels, artwork and sounds are our own.

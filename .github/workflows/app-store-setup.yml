@@ -1,0 +1,26 @@
+# Fills in the Nest Rows App Store Connect page through the App Store Connect API:
+# search words, listing text, age rating, price and countries, the 4 in-app purchases, review notes,
+# and attaches the newest uploaded build. Runs when the app-store-setup branch is pushed.
+# It NEVER submits anything for review; Joseph presses Add for Review / Submit himself.
+name: App Store setup
+on:
+  push:
+    branches: [app-store-setup]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: app-store-setup
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - run: pip install pyjwt cryptography
+      - name: Fill in the App Store page (never submits)
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: python3 .github/asc/setup.py
